@@ -1,113 +1,128 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>UNIRÁ - La app de los conductores</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNIRÁ</title>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: white;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  background: #0b0b0b;
+  color: white;
+}
 
-    section {
-      padding: 60px 20px;
-      text-align: center;
-    }
+header {
+  background: #000;
+  padding: 20px;
+  text-align: center;
+  border-bottom: 1px solid #222;
+}
 
-    .hero {
-      background: linear-gradient(135deg, #0f2027, #2c5364);
-    }
+h1 {
+  font-size: 42px;
+  margin: 0;
+}
 
-    h1 {
-      font-size: 40px;
-      margin-bottom: 10px;
-    }
+.hero {
+  padding: 80px 20px;
+  text-align: center;
+  background: linear-gradient(180deg, #000, #111);
+}
 
-    h2 {
-      font-size: 28px;
-      margin-bottom: 20px;
-      color: #00ffae;
-    }
+.hero h2 {
+  font-size: 36px;
+  color: #00ffae;
+}
 
-    p {
-      font-size: 18px;
-      max-width: 700px;
-      margin: 0 auto 20px;
-    }
+.hero p {
+  font-size: 20px;
+  max-width: 700px;
+  margin: auto;
+}
 
-    .btn {
-      display: inline-block;
-      padding: 15px 25px;
-      background: #00ffae;
-      color: black;
-      text-decoration: none;
-      font-weight: bold;
-      border-radius: 5px;
-      margin-top: 20px;
-    }
+.btn {
+  margin-top: 30px;
+  padding: 15px 30px;
+  background: #00ffae;
+  color: black;
+  text-decoration: none;
+  font-weight: bold;
+  border-radius: 8px;
+  display: inline-block;
+}
 
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 20px;
-      max-width: 800px;
-      margin: auto;
-    }
+section {
+  padding: 60px 20px;
+  text-align: center;
+}
 
-    .card {
-      background: #222;
-      padding: 20px;
-      border-radius: 10px;
-    }
+.grid {
+  display: grid;
+  gap: 20px;
+  max-width: 1000px;
+  margin: auto;
+}
 
-    @media (min-width: 768px) {
-      .grid {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-  </style>
+.card {
+  background: #151515;
+  padding: 25px;
+  border-radius: 12px;
+}
+
+.highlight {
+  color: #00ffae;
+  font-weight: bold;
+  font-size: 28px;
+}
+
+img {
+  max-width: 90%;
+  border-radius: 10px;
+}
+
+@media(min-width:768px){
+  .grid{
+    grid-template-columns: repeat(2,1fr);
+  }
+}
+</style>
 </head>
 
 <body>
 
-<section class="hero">
+<header>
   <h1>UNIRÁ</h1>
+</header>
+
+<section class="hero">
   <h2>La app de los conductores</h2>
   <p>Menos comisión. Más ganancias. Todos somos dueños.</p>
   <a class="btn" href="#form">QUIERO PARTICIPAR</a>
 </section>
 
 <section>
-  <h2>¿Estás cansado de esto?</h2>
+  <h2>¿Qué está pasando hoy?</h2>
   <div class="grid">
-    <div class="card">Comisiones de hasta 30% o más</div>
+    <div class="card">Hasta 30% o más de comisión</div>
     <div class="card">Tarifas cada vez más bajas</div>
-    <div class="card">Cobrás menos de lo que te muestran</div>
-    <div class="card">Pagás peajes de tu bolsillo</div>
+    <div class="card">Diferencias entre lo que ves y cobrás</div>
+    <div class="card">Peajes incluidos que reducen tu ganancia</div>
   </div>
 </section>
 
 <section>
-  <h2>La solución</h2>
-  <p>Creamos una cooperativa de conductores para desarrollar nuestra propia app.</p>
-  <p>Pagás solo 5% y la app es de todos.</p>
-</section>
-
-<section>
-  <h2>Ganancia real</h2>
+  <h2>La diferencia</h2>
   <p>$100.000 → $75.000 (apps actuales)</p>
   <p>$100.000 → $95.000 (UNIRÁ)</p>
-  <h2>+$500.000 por mes</h2>
+  <p class="highlight">+$500.000 por mes</p>
 </section>
 
 <section>
-  <h2>Ahorro adicional</h2>
+  <h2>Ahorro extra</h2>
   <p>Compras comunitarias de alimentos e insumos</p>
-  <h2>+$100.000 por mes</h2>
+  <p class="highlight">+$100.000 por mes</p>
 </section>
 
 <section>
@@ -115,22 +130,33 @@
   <div class="grid">
     <div class="card">Cuenta bancaria institucional</div>
     <div class="card">Firmas múltiples</div>
-    <div class="card">Control de todos los socios</div>
+    <div class="card">Control de socios</div>
     <div class="card">Nadie puede llevarse el dinero</div>
   </div>
 </section>
 
 <section>
-  <h2>El futuro</h2>
-  <p>Talleres propios, beneficios para socios, expansión nacional y más servicios.</p>
+  <h2>Esto recién empieza</h2>
+  <p>Talleres propios, beneficios, expansión nacional y más servicios.</p>
+</section>
+
+<section>
+  <h2>Conductores interesados</h2>
+  <p class="highlight">1.237+</p>
+</section>
+
+<section>
+  <h2>La realidad</h2>
+  <img src="img/flyer1.jpg">
 </section>
 
 <section id="form">
   <h2>Sumate ahora</h2>
-  <p>Completá el formulario para participar</p>
 
-  <!-- REEMPLAZAR ESTE LINK POR TU GOOGLE FORM -->
-  <a class="btn" href="https://forms.gle/TU_FORMULARIO">QUIERO SER PARTE</a>
+  <iframe src="https://docs.google.com/forms/d/e/TU_ID/viewform?embedded=true"
+  width="100%" height="800" frameborder="0">
+  </iframe>
+
 </section>
 
 <section>
