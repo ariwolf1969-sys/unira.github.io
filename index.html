@@ -7,98 +7,182 @@
 
 <style>
 body {
-  margin:0;
-  font-family: Arial;
-  background: linear-gradient(135deg,#0a0f2c,#1b2f6b,#0d1a40);
-  color:white;
-  text-align:center;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  color: white;
+  background: linear-gradient(180deg, #0a0f2c, #0d1b4c, #071033);
 }
 
-/* NAV */
-nav {
-  padding:15px;
-  background:#000;
+header {
+  padding: 20px;
+  text-align: center;
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(10px);
 }
 
 nav a {
-  margin:10px;
-  color:white;
-  text-decoration:none;
-  font-weight:bold;
+  margin: 10px;
+  color: #00e0ff;
+  text-decoration: none;
+  font-weight: bold;
 }
 
-/* HERO */
 .hero {
-  padding:80px 20px;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.hero img {
+  width: 100%;
+  max-width: 1000px;
+  border-radius: 12px;
+  margin-top: 20px;
+}
+
+h1 {
+  font-size: 40px;
+  margin: 10px 0;
 }
 
 .pulse {
-  color:red;
-  animation:pulse 1.5s infinite;
+  color: #00ffcc;
+  font-size: 28px;
+  animation: pulse 1.5s infinite;
 }
 
 @keyframes pulse {
-  0%{opacity:1;}
-  50%{opacity:0.5;}
-  100%{opacity:1;}
+  0% {opacity: 1;}
+  50% {opacity: 0.5;}
+  100% {opacity: 1;}
 }
 
-/* BOTON */
 .btn {
-  display:inline-block;
-  margin:15px;
-  padding:15px 30px;
-  background:#00ffae;
-  color:black;
-  border-radius:10px;
-  text-decoration:none;
-  font-weight:bold;
+  display: inline-block;
+  margin: 15px;
+  padding: 15px 25px;
+  background: linear-gradient(45deg, #00ffcc, #00aaff);
+  color: black;
+  text-decoration: none;
+  font-weight: bold;
+  border-radius: 8px;
 }
 
-/* WHATSAPP */
+.section {
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  gap: 20px;
+  max-width: 1000px;
+  margin: auto;
+}
+
+.card {
+  background: rgba(255,255,255,0.05);
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.highlight {
+  font-size: 26px;
+  color: #00ffcc;
+  font-weight: bold;
+}
+
+iframe {
+  width: 100%;
+  max-width: 800px;
+  height: 900px;
+  border: none;
+  border-radius: 10px;
+}
+
 .whatsapp {
-  position:fixed;
-  bottom:20px;
-  right:20px;
-  background:#25D366;
-  color:white;
-  padding:15px;
-  border-radius:50%;
-  font-size:20px;
-  text-decoration:none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #25D366;
+  color: white;
+  padding: 15px;
+  border-radius: 50%;
+  text-decoration: none;
+  font-size: 20px;
 }
 
+@media(min-width:768px){
+  .grid {
+    grid-template-columns: repeat(2,1fr);
+  }
+}
 </style>
 </head>
 
 <body>
 
-<nav>
-  <a href="nosotros.html">Nosotros</a>
-  <a href="numeros.html">Números</a>
-  <a href="cooperativa.html">Cooperativa</a>
-</nav>
+<header>
+  <h1>Cooperativa Unira</h1>
+  <nav>
+    <a href="nosotros.html">Nosotros</a>
+    <a href="numeros.html">Números</a>
+    <a href="cooperativa.html">Cómo funciona</a>
+    <a href="#form">Sumarme</a>
+  </nav>
+</header>
 
 <section class="hero">
-  <h1>Cooperativa Unira</h1>
+  <h2 class="pulse">BUSCAMOS LOS PRIMEROS 50 SOCIOS FUNDADORES</h2>
+  <p>Una app creada por conductores. Sin abusos. Sin intermediarios.</p>
 
-  <h2 class="pulse">BUSCAMOS 50 SOCIOS FUNDADORES</h2>
-  <img src="img/grupo.jpg" style="width:100%; margin-top:20px;">
+  <img src="./img/grupo.jpg">
 
-  <p>
-  Conductores creando su propia app.<br>
-  Basta de comisiones del 30% o 40%.
-  </p>
+  <br>
 
-  <a class="btn" href="https://forms.gle/D6J3PQNWERqS78Vd9" target="_blank">
-    COMPLETAR FORMULARIO
-  </a>
+  <a class="btn" href="#form">QUIERO PARTICIPAR</a>
+  <a class="btn" href="https://wa.me/5491155976414" target="_blank">WhatsApp</a>
 </section>
 
-<!-- WHATSAPP -->
-<a class="whatsapp" href="https://wa.me/5491155976414" target="_blank">
-💬
-</a>
+<section class="section">
+  <h2>La realidad hoy</h2>
+  <div class="grid">
+    <div class="card">Hasta 40% de comisión</div>
+    <div class="card">Tarifas cada vez más bajas</div>
+    <div class="card">Trabajás más y ganás menos</div>
+    <div class="card">No sos dueño de nada</div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>La diferencia</h2>
+  <p>$100.000 → $65.000 (apps actuales)</p>
+  <p>$100.000 → $95.000 (cooperativa)</p>
+  <p class="highlight">+ $500.000 por mes</p>
+</section>
+
+<section class="section">
+  <h2>Beneficios reales</h2>
+  <div class="grid">
+    <div class="card">Comisión baja (5%)</div>
+    <div class="card">Compras comunitarias</div>
+    <div class="card">Talleres propios (futuro)</div>
+    <div class="card">Decisiones entre socios</div>
+  </div>
+</section>
+
+<section class="section" id="form">
+  <h2>Sumate ahora</h2>
+  <p>Completá el formulario</p>
+
+  <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd_ATSPaY07Z7hfXSa1f3oj9sgIwLpcCTyg9vR5uV5Zcgrfww/viewform?embedded=true">
+  </iframe>
+</section>
+
+<section class="section">
+  <p>UNIRA – Unidos ganamos más</p>
+</section>
+
+<a class="whatsapp" href="https://wa.me/5491155976414" target="_blank">💬</a>
 
 </body>
 </html>
