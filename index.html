@@ -3,93 +3,108 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UNIRÁ</title>
+<title>Cooperativa Unira</title>
 
 <style>
+
 body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(180deg, #000000, #001a14);
-  color: white;
+  margin:0;
+  font-family: 'Segoe UI', sans-serif;
+  color:white;
+  background: linear-gradient(135deg, #0a0f2c, #1b2f6b, #0d1a40);
 }
 
-/* HEADER */
-header {
-  padding: 20px;
-  text-align: center;
-  background: rgba(0,0,0,0.9);
-  border-bottom: 1px solid #222;
+/* NAV */
+nav {
+  display:flex;
+  justify-content:center;
+  gap:20px;
+  padding:15px;
+  background: rgba(0,0,0,0.6);
+  position: sticky;
+  top:0;
+  backdrop-filter: blur(10px);
 }
 
-h1 {
-  font-size: 42px;
-  color: #00ffae;
+nav a {
+  color:white;
+  text-decoration:none;
+  font-weight:bold;
 }
 
 /* HERO */
 .hero {
-  padding: 100px 20px;
-  text-align: center;
+  text-align:center;
+  padding:80px 20px;
 }
 
-.hero h2 {
-  font-size: 36px;
+.hero h1 {
+  font-size:45px;
+  background: linear-gradient(90deg,#00cfff,#7a5cff);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
 }
 
-.hero p {
-  font-size: 20px;
-  max-width: 700px;
-  margin: auto;
+.pulse {
+  color:#ff3b3b;
+  animation:pulse 1.5s infinite;
 }
 
-/* BOTÓN */
+@keyframes pulse {
+  0% {opacity:1;}
+  50% {opacity:0.5;}
+  100% {opacity:1;}
+}
+
 .btn {
-  margin-top: 30px;
-  padding: 15px 30px;
-  background: #00ffae;
-  color: black;
-  text-decoration: none;
-  font-weight: bold;
-  border-radius: 10px;
-  display: inline-block;
-  transition: 0.3s;
-}
-
-.btn:hover {
-  transform: scale(1.1);
+  display:inline-block;
+  margin-top:20px;
+  padding:15px 30px;
+  background: linear-gradient(90deg,#00cfff,#4effc5);
+  color:black;
+  border-radius:10px;
+  text-decoration:none;
+  font-weight:bold;
 }
 
 /* SECCIONES */
 section {
-  padding: 70px 20px;
-  text-align: center;
+  padding:60px 20px;
+  text-align:center;
 }
 
+/* GRID */
 .grid {
-  display: grid;
-  gap: 20px;
-  max-width: 1000px;
-  margin: auto;
+  display:grid;
+  gap:20px;
+  max-width:1000px;
+  margin:auto;
 }
 
 .card {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(0,255,174,0.2);
-  padding: 25px;
-  border-radius: 12px;
-  backdrop-filter: blur(5px);
+  background: rgba(255,255,255,0.08);
+  padding:20px;
+  border-radius:12px;
 }
 
-.highlight {
-  color: #00ffae;
-  font-size: 32px;
-  font-weight: bold;
+/* CONTADOR */
+.counter {
+  font-size:40px;
+  color:#00ffae;
 }
 
+/* IMAGEN */
 img {
-  max-width: 90%;
-  border-radius: 12px;
-  margin-top: 20px;
+  max-width:90%;
+  border-radius:15px;
+  margin-top:20px;
+}
+
+/* VIDEO */
+iframe {
+  width:90%;
+  height:400px;
+  border-radius:15px;
 }
 
 /* RESPONSIVE */
@@ -98,100 +113,110 @@ img {
     grid-template-columns: repeat(2,1fr);
   }
 }
+
 </style>
 </head>
 
 <body>
 
-<header>
-  <h1>UNIRÁ</h1>
-</header>
+<!-- NAV -->
+<nav>
+  <a href="#about">Acerca</a>
+  <a href="#numeros">Números</a>
+  <a href="#cooperativa">Cooperativa</a>
+  <a href="#form">Sumarte</a>
+</nav>
 
+<!-- HERO -->
 <section class="hero">
-  <h2 style="color:#ff3b3b;">🚨 ¿CANSADO DE QUE LAS APPS SE QUEDEN CON TU DINERO?</h2>
+  <h1>Cooperativa Unira</h1>
 
-  <h2>Recuperá lo que es tuyo</h2>
+  <h2 class="pulse">BUSCAMOS LOS PRIMEROS 50 SOCIOS</h2>
 
   <p>
-  Hoy trabajás 12 horas y te sacan hasta el 40%.<br>
-  En UNIRÁ, la comisión es solo del 5%.<br><br>
-
-  👉 Más dinero en tu bolsillo<br>
-  👉 Más control sobre tu trabajo<br>
-  👉 Vos sos dueño, no empleado
+  Conductores creando su propia app.<br>
+  Basta de comisiones abusivas del 30% o 40%.
   </p>
 
   <a class="btn" href="#form">QUIERO PARTICIPAR</a>
 </section>
 
+<!-- PROBLEMA -->
 <section>
-  <h2>La realidad del conductor hoy</h2>
+  <h2>La realidad hoy</h2>
+
+  <div class="grid">
+    <div class="card">Te sacan hasta el 40%</div>
+    <div class="card">Tarifas cada vez más bajas</div>
+    <div class="card">Trabajás más y ganás menos</div>
+    <div class="card">No tenés control</div>
+  </div>
+
   <img src="a_uber_driver_exhauste.jpeg">
 </section>
 
+<!-- SOLUCION -->
 <section>
-  <h2>¿Qué está pasando hoy?</h2>
+  <h2>La propuesta</h2>
+
   <div class="grid">
-    <div class="card">❌ Te sacan hasta el 40% de cada viaje</div>
-    <div class="card">❌ Tarifas cada vez más bajas</div>
-    <div class="card">❌ Trabajás más y ganás menos</div>
-    <div class="card">❌ Nadie te protege</div>
+    <div class="card">Comisión solo 5%</div>
+    <div class="card">Sos socio, no empleado</div>
+    <div class="card">Decisiones en conjunto</div>
+    <div class="card">Más dinero en tu bolsillo</div>
   </div>
-</section>
 
-<section>
-  <h2>La diferencia es brutal</h2>
-  <p>$100.000 en apps → $65.000 / $75.000</p>
-  <p>$100.000 en UNIRÁ → $95.000</p>
-  <p class="highlight"> $500.000 o mas por mes en tu bolsillo</p>
-</section>
-
-<section>
-  <h2>Lo que pasa con tu dinero</h2>
-  <img src="b_money_disappearing_f.jpeg">
-</section>
-
-<section>
-  <h2>Unidos podemos cambiarlo</h2>
   <img src="a_group_of_drivers_uni.png">
 </section>
 
-<section>
-  <h2>Ahorro adicional</h2>
-  <p>Compras comunitarias de alimentos e insumos</p>
-  <p class="highlight">+ $100.000 por mes</p>
+<!-- NUMEROS -->
+<section id="numeros">
+  <h2>Números claros</h2>
+
+  <p>$100.000 → hoy te quedan $65.000</p>
+  <p>$100.000 → con nosotros $95.000</p>
+
+  <h2 style="color:#00ffae;">+ $500.000 por mes</h2>
+
+  <p>+ $100.000 ahorro compras comunitarias</p>
+
+  <img src="b_money_disappearing_f.jpeg">
 </section>
 
+<!-- CONTADOR -->
 <section>
-  <h2>Transparencia total</h2>
-  <div class="grid">
-    <div class="card">Cuenta bancaria institucional</div>
-    <div class="card">Firmas múltiples</div>
-    <div class="card">Control de socios</div>
-    <div class="card">Nadie puede llevarse el dinero</div>
-  </div>
+  <h2>Conductores interesados</h2>
+
+  <div class="counter">1.237+</div>
 </section>
 
+<!-- ABOUT -->
+<section id="about">
+  <h2>Acerca de nosotros</h2>
+
+  <p>
+  Somos conductores como vos.<br>
+  Cansados de perder dinero, decidimos organizarnos.<br><br>
+
+  La idea es crear una cooperativa donde todos sean dueños,
+  con transparencia total y control compartido.
+  </p>
+</section>
+
+<!-- VIDEO -->
+<section id="cooperativa">
+  <h2>¿Qué es una cooperativa?</h2>
+
+  <iframe src="https://www.youtube.com/embed/NwQgM6ZNFzI" allowfullscreen></iframe>
+</section>
+
+<!-- FORM -->
 <section id="form">
   <h2>Sumate ahora</h2>
 
-  <p>
-  Solo buscamos 50 conductores iniciales.<br>
-  Si estás cansado de perder plata, este es el momento.
-  </p>
+  <p>Completá el formulario:</p>
 
-  <a class="btn" 
-     href="https://docs.google.com/forms/d/e/1FAIpQLSd_ATSPaY07Z7hfXSa1f3oj9sgIwLpcCTyg9vR5uV5Zcgrfww/viewform" 
-     target="_blank">
-     COMPLETAR FORMULARIO
-  </a>
-</section>
-
-<section>
-  <p class="highlight">
-  Basta de enriquecer a otros.<br>
-  Es momento de construir algo propio.
-  </p>
+  <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd_ATSPaY07Z7hfXSa1f3oj9sgIwLpcCTyg9vR5uV5Zcgrfww/viewform?embedded=true" height="800"></iframe>
 </section>
 
 </body>
