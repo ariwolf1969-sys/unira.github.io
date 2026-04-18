@@ -2,1212 +2,1051 @@
 <html lang="es-AR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Unira - Viajes en Argentina</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Unira</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg: #0A0F14;
-    --surface: #121A22;
-    --card: #1A242E;
-    --border: #2A3642;
-    --fg: #F0F4F8;
-    --muted: #7A8B9A;
-    --brand-start: #0EA5A0;
-    --brand-end: #0C8CE9;
-    --accent: #0EA5A0;
-    --accent-light: #14D4CD;
-    --accent-glow: rgba(14,165,160,0.25);
-    --brand-gradient: linear-gradient(135deg, #0EA5A0, #0C8CE9);
-    --danger: #FF5252;
-    --warning: #FFB74D;
-    --radius: 16px;
-    --radius-sm: 10px;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  body {
-    font-family:'Plus Jakarta Sans',sans-serif;
-    background:var(--bg);
-    color:var(--fg);
-    overflow:hidden;
-    height:100dvh; width:100vw;
-    position:relative;
-  }
+:root{
+  --bg:#0A0F14;--surface:#121A22;--card:#1A242E;--border:#2A3642;
+  --fg:#F0F4F8;--muted:#7A8B9A;
+  --brand-start:#0EA5A0;--brand-end:#0C8CE9;
+  --accent:#0EA5A0;--accent-light:#14D4CD;--accent-glow:rgba(14,165,160,.25);
+  --danger:#FF5252;--warning:#FFB74D;
+  --radius:16px;--radius-sm:10px;
+  --brand-grad:linear-gradient(135deg,#0EA5A0,#0C8CE9);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--fg);overflow:hidden;height:100dvh;width:100vw;position:relative}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;z-index:10}.screen.active{display:flex}
+button{font-family:inherit}
+input,select,textarea{font-family:inherit}
 
-  /* ====== PULSADOR DE INTERRUPCIÓN GLOBAL ====== */
-  .stop-btn {
-    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) scale(0);
-    z-index:300;
-    width:64px; height:64px; border-radius:50%;
-    background:var(--danger);
-    border:3px solid rgba(255,255,255,0.2);
-    display:flex; align-items:center; justify-content:center;
-    color:#fff; font-size:24px; cursor:pointer;
-    box-shadow: 0 4px 24px rgba(255,82,82,0.5), 0 0 0 6px rgba(255,82,82,0.15);
-    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  .stop-btn.visible { transform:translateX(-50%) scale(1); }
-  .stop-btn:active { transform:translateX(-50%) scale(0.9); }
-  .stop-btn .stop-label {
-    position:absolute; top:-28px; left:50%; transform:translateX(-50%);
-    background:var(--danger); color:#fff; font-size:10px; font-weight:700;
-    padding:3px 10px; border-radius:10px; white-space:nowrap;
-    letter-spacing:0.5px; text-transform:uppercase;
-  }
+/* Pulsador STOP */
+.stop-btn{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) scale(0);z-index:300;width:62px;height:62px;border-radius:50%;background:var(--danger);border:3px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 24px rgba(255,82,82,.5),0 0 0 6px rgba(255,82,82,.15);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.stop-btn.visible{transform:translateX(-50%) scale(1)}
+.stop-btn:active{transform:translateX(-50%) scale(.9)}
+.stop-label{position:absolute;top:-26px;left:50%;transform:translateX(-50%);background:var(--danger);color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:8px;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase}
 
-  /* ====== PANTALLAS ====== */
-  .screen {
-    position:absolute; inset:0;
-    display:none; flex-direction:column;
-    z-index:10;
-  }
-  .screen.active { display:flex; }
+/* Toast */
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:400;background:var(--card);border:1px solid var(--border);padding:10px 18px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.5);animation:fadeUp .3s;display:none;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
+.toast.show{display:block}.toast.error{border-color:var(--danger);color:var(--danger)}.toast.success{border-color:var(--accent);color:var(--accent-light)}
 
-  /* ====== SPLASH ====== */
-  #splash {
-    background:var(--bg);
-    justify-content:center; align-items:center;
-    z-index:100;
-  }
-  .splash-logo-wrap {
-    text-align:center;
-    animation: fadeInUp 0.8s ease;
-  }
-  .splash-logo-wrap img {
-    width:120px; height:120px; object-fit:contain;
-    margin-bottom:20px;
-    filter: drop-shadow(0 4px 20px var(--accent-glow));
-  }
-  .splash-logo-wrap h1 {
-    font-size:22px; font-weight:900; letter-spacing:2px; text-transform:uppercase;
-    background:var(--brand-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-    background-clip:text;
-  }
-  .splash-logo-wrap p { color:var(--muted); margin-top:6px; font-size:13px; }
-  .splash-dots { display:flex; gap:8px; justify-content:center; margin-top:36px; }
-  .splash-dots span {
-    width:8px; height:8px; border-radius:50%; background:var(--border);
-    animation: dotPulse 1.4s infinite;
-  }
-  .splash-dots span:nth-child(2) { animation-delay:0.2s; }
-  .splash-dots span:nth-child(3) { animation-delay:0.4s; }
+@keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.7}}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  @keyframes dotPulse {
-    0%,80%,100% { background:var(--border); transform:scale(1); }
-    40% { background:var(--accent); transform:scale(1.4); }
-  }
-  @keyframes fadeInUp {
-    from { opacity:0; transform:translateY(30px); }
-    to { opacity:1; transform:translateY(0); }
-  }
-  @keyframes slideUp {
-    from { transform:translateY(100%); }
-    to { transform:translateY(0); }
-  }
-  @keyframes pulse {
-    0%,100% { transform:scale(1); opacity:1; }
-    50% { transform:scale(1.08); opacity:0.7; }
-  }
+/* Splash */
+#splash{background:var(--bg);justify-content:center;align-items:center;z-index:100}
+.splash-wrap{text-align:center;animation:fadeUp .8s}
+.splash-wrap img{width:110px;height:110px;object-fit:contain;margin-bottom:18px;filter:drop-shadow(0 4px 20px var(--accent-glow))}
+.splash-wrap h1{font-size:26px;font-weight:900;letter-spacing:3px;text-transform:uppercase;background:var(--brand-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.splash-wrap p{color:var(--muted);margin-top:4px;font-size:12px}
+.splash-dots{display:flex;gap:8px;justify-content:center;margin-top:32px}
+.splash-dots span{width:7px;height:7px;border-radius:50%;background:var(--border);animation:dotP 1.4s infinite}
+.splash-dots span:nth-child(2){animation-delay:.2s}.splash-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dotP{0%,80%,100%{background:var(--border);transform:scale(1)}40%{background:var(--accent);transform:scale(1.3)}}
 
-  /* ====== LOGIN ====== */
-  #login { background:var(--bg); padding:0 24px; justify-content:center; }
-  .login-header { text-align:center; margin-bottom:36px; }
-  .login-header .icon-back {
-    width:40px; height:40px; border-radius:12px;
-    background:var(--card); border:1px solid var(--border);
-    display:inline-flex; align-items:center; justify-content:center;
-    color:var(--fg); cursor:pointer; margin-bottom:20px; font-size:16px;
-  }
-  .login-header img {
-    width:72px; height:72px; object-fit:contain; margin-bottom:16px;
-    filter: drop-shadow(0 2px 12px var(--accent-glow));
-  }
-  .login-header h2 { font-size:24px; font-weight:800; }
-  .login-header p { color:var(--muted); font-size:13px; margin-top:6px; line-height:1.5; }
+/* Setup */
+#setup{background:var(--bg);overflow-y:auto;padding:24px 20px}
+.setup-card{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.setup-card h3{font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.setup-card h3 i{color:var(--accent)}
+.setup-card p{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px}
+.setup-card ol{font-size:11px;color:var(--muted);line-height:1.8;padding-left:18px;margin-bottom:12px}
+.setup-input{width:100%;height:44px;padding:0 12px;background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--fg);font-size:13px;outline:none;transition:border-color .2s}
+.setup-input:focus{border-color:var(--accent)}
+.setup-input::placeholder{color:var(--border)}
+.setup-note{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.5}
 
-  .phone-input-group {
-    display:flex; align-items:center; gap:12px;
-    background:var(--card); border:2px solid var(--border);
-    border-radius:var(--radius); padding:0 16px; height:56px;
-    transition: border-color 0.2s;
-  }
-  .phone-input-group:focus-within { border-color:var(--accent); }
-  .phone-prefix {
-    font-size:15px; font-weight:700; color:var(--accent);
-    white-space:nowrap; padding-right:12px; border-right:1px solid var(--border);
-  }
-  .phone-input-group input {
-    flex:1; background:none; border:none; outline:none;
-    color:var(--fg); font-size:16px; font-family:inherit; letter-spacing:1px;
-  }
-  .phone-input-group input::placeholder { color:var(--muted); font-weight:300; }
+/* Role Select */
+#roleSelect{background:var(--bg);justify-content:center;align-items:center;padding:24px}
+.role-content{text-align:center;max-width:360px;width:100%}
+.role-content img{width:80px;height:80px;object-fit:contain;margin-bottom:16px}
+.role-content h2{font-size:20px;font-weight:800;margin-bottom:24px}
+.role-cards{display:flex;gap:14px}
+.role-card{flex:1;background:var(--card);border:2px solid var(--border);border-radius:var(--radius);padding:24px 14px;cursor:pointer;transition:border-color .2s,transform .15s;text-align:center}
+.role-card:active{transform:scale(.97)}
+.role-card:hover{border-color:var(--accent)}
+.role-card .ri{width:52px;height:52px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px;color:var(--accent)}
+.role-card .rn{font-size:15px;font-weight:700;margin-bottom:4px}
+.role-card .rd{font-size:11px;color:var(--muted);line-height:1.4}
 
-  .btn-primary {
-    width:100%; height:54px; border:none; border-radius:var(--radius);
-    background:var(--brand-gradient);
-    color:#fff; font-size:15px; font-weight:700; font-family:inherit; cursor:pointer;
-    margin-top:18px;
-    box-shadow: 0 4px 20px var(--accent-glow);
-    transition: transform 0.15s, box-shadow 0.2s;
-  }
-  .btn-primary:active { transform:scale(0.97); }
-  .btn-primary:disabled { opacity:0.35; cursor:not-allowed; transform:none; box-shadow:none; }
+/* Login */
+#login{background:var(--bg);padding:0 24px;justify-content:center}
+.lhead{text-align:center;margin-bottom:32px}
+.lhead .ib{width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;color:var(--fg);cursor:pointer;margin-bottom:18px;font-size:15px}
+.lhead img{width:60px;height:60px;object-fit:contain;margin-bottom:14px}
+.lhead h2{font-size:22px;font-weight:800}
+.lhead p{color:var(--muted);font-size:12px;margin-top:4px}
+.ph-group{display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--border);border-radius:var(--radius);padding:0 14px;height:54px;transition:border-color .2s}
+.ph-group:focus-within{border-color:var(--accent)}
+.ph-pre{font-size:14px;font-weight:700;color:var(--accent);white-space:nowrap;padding-right:10px;border-right:1px solid var(--border)}
+.ph-group input{flex:1;background:none;border:none;outline:none;color:var(--fg);font-size:15px;letter-spacing:1px}
+.ph-group input::placeholder{color:var(--muted);font-weight:300}
+.btn-p{width:100%;height:52px;border:none;border-radius:var(--radius);background:var(--brand-grad);color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-top:16px;box-shadow:0 4px 20px var(--accent-glow);transition:transform .15s}
+.btn-p:active{transform:scale(.97)}.btn-p:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-s{background:var(--card);border:1px solid var(--border);color:var(--fg);font-size:13px;font-weight:600;padding:10px 24px;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit}
+.btn-s:active{background:var(--border)}
+.lnote{text-align:center;margin-top:14px;font-size:10px;color:var(--muted);line-height:1.6}
 
-  .login-note { text-align:center; margin-top:16px; font-size:11px; color:var(--muted); line-height:1.6; }
+/* Verify */
+.code-in{display:flex;gap:8px;justify-content:center;margin:22px 0}
+.code-in input{width:48px;height:54px;text-align:center;font-size:20px;font-weight:700;background:var(--card);border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--fg);outline:none;transition:border-color .2s}
+.code-in input:focus{border-color:var(--accent)}
 
-  /* ====== VERIFICACIÓN ====== */
-  .code-inputs { display:flex; gap:10px; justify-content:center; margin:24px 0; }
-  .code-inputs input {
-    width:50px; height:58px; text-align:center;
-    font-size:22px; font-weight:700; font-family:inherit;
-    background:var(--card); border:2px solid var(--border);
-    border-radius:var(--radius-sm); color:var(--fg); outline:none;
-    transition:border-color 0.2s;
-  }
-  .code-inputs input:focus { border-color:var(--accent); }
+/* Mapa */
+#mapScreen{z-index:5}
+#map{position:absolute;inset:0;z-index:1}
+.leaflet-control-zoom,.leaflet-control-attribution{display:none!important}
+.mtop{position:absolute;top:0;left:0;right:0;z-index:20;padding:14px 14px 0;background:linear-gradient(to bottom,var(--bg) 55%,transparent);padding-bottom:18px}
+.mtop .ug{display:flex;align-items:center;gap:10px}
+.av{width:38px;height:38px;border-radius:50%;background:var(--brand-grad);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;flex-shrink:0}
+.gt h3{font-size:14px;font-weight:700}.gt p{font-size:10px;color:var(--muted)}
+.ibtn{width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;color:var(--fg);cursor:pointer;font-size:15px;flex-shrink:0}
+.cbtn{position:absolute;right:14px;bottom:310px;z-index:20;width:42px;height:42px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--fg);font-size:17px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4)}
 
-  /* ====== MAPA ====== */
-  #mapScreen { z-index:5; }
-  #map { position:absolute; inset:0; z-index:1; }
-  .leaflet-control-zoom { display:none; }
-  .leaflet-control-attribution { display:none !important; }
+/* Driver top bar */
+.dtop{position:absolute;top:0;left:0;right:0;z-index:20;padding:14px;background:linear-gradient(to bottom,var(--bg) 70%,transparent);padding-bottom:24px}
+.dtop .dr{display:flex;align-items:center;gap:10px}
+.dtop .dr .dl{flex:1}
+.dtop .dr .dn{font-size:14px;font-weight:700}
+.dtop .dr .ds{font-size:11px;color:var(--muted)}
+.online-toggle{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:20px;padding:6px 14px}
+.toggle-track{width:44px;height:24px;border-radius:12px;background:var(--border);position:relative;cursor:pointer;transition:background .2s}
+.toggle-track.on{background:var(--accent)}
+.toggle-thumb{width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.toggle-track.on .toggle-thumb{left:22px}
+.toggle-label{font-size:11px;font-weight:600;color:var(--muted)}
+.toggle-label.on{color:var(--accent-light)}
 
-  .map-topbar {
-    position:absolute; top:0; left:0; right:0; z-index:20;
-    padding:16px 16px 0;
-    background: linear-gradient(to bottom, var(--bg) 55%, transparent);
-    padding-bottom:20px;
-  }
-  .map-topbar .user-greeting { display:flex; align-items:center; gap:12px; }
-  .map-topbar .avatar {
-    width:42px; height:42px; border-radius:50%;
-    background:var(--brand-gradient);
-    display:flex; align-items:center; justify-content:center;
-    font-weight:800; font-size:16px; color:#fff;
-  }
-  .greeting-text h3 { font-size:15px; font-weight:700; }
-  .greeting-text p { font-size:11px; color:var(--muted); }
-  .icon-btn {
-    width:40px; height:40px; border-radius:12px;
-    background:var(--card); border:1px solid var(--border);
-    display:inline-flex; align-items:center; justify-content:center;
-    color:var(--fg); cursor:pointer; font-size:16px;
-    flex-shrink:0;
-  }
+/* Bottom Sheets */
+.bs{position:absolute;bottom:0;left:0;right:0;z-index:20;background:var(--surface);border-radius:22px 22px 0 0;box-shadow:0 -4px 30px rgba(0,0,0,.5);animation:slideUp .35s;max-height:72dvh;overflow-y:auto}
+.bs .handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:8px auto 0}
+.sc{padding:14px 18px 26px}
 
-  .center-btn {
-    position:absolute; right:16px; bottom:320px; z-index:20;
-    width:44px; height:44px; border-radius:50%;
-    background:var(--card); border:1px solid var(--border);
-    display:flex; align-items:center; justify-content:center;
-    color:var(--fg); font-size:18px; cursor:pointer;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-  }
+/* Route fields */
+.rf{display:flex;flex-direction:column}
+.rfd{display:flex;align-items:center;gap:10px;padding:11px 0;position:relative}
+.rfd:not(:last-child)::after{content:'';position:absolute;left:14px;top:38px;bottom:-2px;width:2px;background:var(--border)}
+.rdot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:8px}
+.rdot.o{background:var(--accent);color:#fff}.rdot.d{background:var(--card);border:2px solid var(--border);color:var(--muted)}
+.rfd input{flex:1;background:none;border:none;outline:none;color:var(--fg);font-size:13px}
+.rfd input::placeholder{color:var(--muted)}
 
-  /* ====== BOTTOM SHEETS ====== */
-  .bottom-sheet {
-    position:absolute; bottom:0; left:0; right:0; z-index:20;
-    background:var(--surface);
-    border-radius:24px 24px 0 0;
-    box-shadow: 0 -4px 30px rgba(0,0,0,0.5);
-    animation: slideUp 0.35s ease;
-    max-height:72dvh; overflow-y:auto;
-  }
-  .bottom-sheet .handle {
-    width:40px; height:4px; border-radius:2px;
-    background:var(--border); margin:10px auto 0;
-  }
-  .sheet-content { padding:16px 20px 28px; }
+/* Suggestions */
+.sugs{background:var(--card);border-radius:var(--radius-sm);margin-top:4px;overflow:hidden;max-height:160px;overflow-y:auto}
+.sug{padding:10px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s}
+.sug:last-child{border:none}.sug:active{background:var(--border)}
+.sug i{color:var(--accent);font-size:12px;width:16px;text-align:center}
+.sug .st{font-size:12px}.sug .ss{font-size:10px;color:var(--muted)}
 
-  /* ====== RUTA ====== */
-  .route-fields { display:flex; flex-direction:column; }
-  .route-field {
-    display:flex; align-items:center; gap:12px;
-    padding:13px 0; position:relative;
-  }
-  .route-field:not(:last-child)::after {
-    content:''; position:absolute; left:15px; top:40px; bottom:-2px;
-    width:2px; background:var(--border);
-  }
-  .route-dot {
-    width:32px; height:32px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    flex-shrink:0; font-size:10px;
-  }
-  .route-dot.origin { background:var(--accent); color:#fff; }
-  .route-dot.dest { background:var(--card); border:2px solid var(--border); color:var(--muted); }
-  .route-field input {
-    flex:1; background:none; border:none; outline:none;
-    color:var(--fg); font-size:14px; font-family:inherit;
-  }
-  .route-field input::placeholder { color:var(--muted); }
+/* Vehicles */
+.vsec{margin-top:16px}
+.vsec h4{font-size:10px;color:var(--muted);font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:.7px}
+.vlist{display:flex;flex-direction:column;gap:6px}
+.vc{display:flex;align-items:center;gap:11px;padding:10px;border-radius:var(--radius-sm);background:var(--card);border:2px solid transparent;cursor:pointer;transition:border-color .2s}
+.vc.sel{border-color:var(--accent);background:rgba(14,165,160,.05)}
+.vc .vi{width:42px;height:42px;border-radius:10px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--accent)}
+.vc .vn{font-size:12px;font-weight:700}.vc .vd{font-size:10px;color:var(--muted);margin-top:1px}
+.vc .vp{text-align:right}.vc .va{font-size:14px;font-weight:800;color:var(--accent-light)}.vc .vt{font-size:10px;color:var(--muted)}
+.pay-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card);border-radius:var(--radius-sm);margin-top:10px;cursor:pointer}
+.pay-row i{color:var(--accent);font-size:15px}.pay-row .pi{flex:1}
+.pay-row .pl{font-size:11px;font-weight:600}.pay-row .pd{font-size:10px;color:var(--muted)}
+.pay-row .pc{font-size:10px;color:var(--accent);font-weight:600}
 
-  /* ====== SUGERENCIAS ====== */
-  .suggestions {
-    background:var(--card); border-radius:var(--radius-sm);
-    margin-top:4px; overflow:hidden; max-height:180px; overflow-y:auto;
-  }
-  .suggestion-item {
-    padding:11px 14px; display:flex; align-items:center; gap:10px;
-    cursor:pointer; transition:background 0.15s;
-    border-bottom:1px solid var(--border);
-  }
-  .suggestion-item:last-child { border:none; }
-  .suggestion-item:active { background:var(--border); }
-  .suggestion-item i { color:var(--accent); font-size:13px; width:18px; text-align:center; }
-  .suggestion-item .sug-text { font-size:13px; }
-  .suggestion-item .sug-sub { font-size:11px; color:var(--muted); }
+/* Searching */
+.searching-sh{text-align:center;padding:32px 20px}
+.sa{width:80px;height:80px;margin:0 auto 18px;position:relative}
+.sa .ci{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--accent)}
+.sa .ring{position:absolute;inset:0;border:2px solid var(--accent);border-radius:50%;animation:pulse 2s infinite}
+.sa .ring:nth-child(2){animation-delay:.5s}.sa .ring:nth-child(3){animation-delay:1s}
+.searching-sh h3{font-size:17px;font-weight:700;margin-bottom:4px}
+.searching-sh p{font-size:12px;color:var(--muted);margin-bottom:18px}
 
-  /* ====== VEHÍCULOS ====== */
-  .vehicle-section { margin-top:18px; }
-  .vehicle-section h4 {
-    font-size:11px; color:var(--muted); font-weight:700;
-    margin-bottom:10px; text-transform:uppercase; letter-spacing:0.8px;
-  }
-  .vehicle-list { display:flex; flex-direction:column; gap:7px; }
-  .vehicle-card {
-    display:flex; align-items:center; gap:13px;
-    padding:12px; border-radius:var(--radius-sm);
-    background:var(--card); border:2px solid transparent;
-    cursor:pointer; transition: border-color 0.2s;
-  }
-  .vehicle-card.selected { border-color:var(--accent); background:rgba(14,165,160,0.06); }
-  .vehicle-card .v-icon {
-    width:46px; height:46px; border-radius:12px;
-    background:var(--surface); display:flex; align-items:center;
-    justify-content:center; font-size:20px; color:var(--accent);
-  }
-  .vehicle-card .v-info { flex:1; }
-  .vehicle-card .v-name { font-size:13px; font-weight:700; }
-  .vehicle-card .v-desc { font-size:11px; color:var(--muted); margin-top:1px; }
-  .vehicle-card .v-price { text-align:right; }
-  .vehicle-card .v-amount { font-size:15px; font-weight:800; color:var(--accent-light); }
-  .vehicle-card .v-time { font-size:11px; color:var(--muted); }
+/* Driver found */
+.df-sh{padding:18px 18px 24px}
+.dfh{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.dfav{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--accent)}
+.dfi h3{font-size:16px;font-weight:700}.dfi .dc{font-size:11px;color:var(--muted);margin-top:1px}
+.dfi .drat{font-size:10px;color:var(--warning);margin-top:2px;display:flex;align-items:center;gap:3px}
+.tdet{background:var(--card);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px}
+.tp{display:flex;align-items:flex-start;gap:8px}.tp+.tp{margin-top:6px}
+.td{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.td.g{background:var(--accent)}.td.r{background:var(--danger)}
+.tt{font-size:11px;line-height:1.3}.ts{font-size:9px;color:var(--muted)}
+.tmeta{display:flex;gap:14px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.tmi{flex:1;text-align:center}.tmv{font-size:14px;font-weight:800;color:var(--accent-light)}.tml{font-size:9px;color:var(--muted);margin-top:1px}
+.dacts{display:flex;gap:8px}
+.abtn{flex:1;height:44px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:inherit}
+.abtn:active{transform:scale(.97)}
+.abtn.call{background:var(--brand-grad);color:#fff}
+.abtn.chat{background:var(--card);color:var(--fg);border:1px solid var(--border)}
 
-  /* ====== PAGO ====== */
-  .payment-row {
-    display:flex; align-items:center; gap:10px;
-    padding:11px 14px; background:var(--card);
-    border-radius:var(--radius-sm); margin-top:12px; cursor:pointer;
-  }
-  .payment-row i { color:var(--accent); font-size:16px; }
-  .payment-row .pay-info { flex:1; }
-  .payment-row .pay-label { font-size:12px; font-weight:600; }
-  .payment-row .pay-detail { font-size:11px; color:var(--muted); }
-  .payment-row .pay-change { font-size:11px; color:var(--accent); font-weight:600; }
+/* In trip */
+.it-sh{padding:18px;text-align:center}
+.it-st{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:12px}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.5s infinite}
+.tpb{width:100%;height:4px;background:var(--card);border-radius:2px;margin:12px 0;overflow:hidden}
+.tpb .fill{height:100%;background:var(--brand-grad);border-radius:2px;transition:width .5s}
+.teta{font-size:28px;font-weight:900;color:var(--accent-light)}
+.tetal{font-size:11px;color:var(--muted);margin-top:2px}
 
-  /* ====== BUSCANDO ====== */
-  .searching-sheet { text-align:center; padding:36px 24px; }
-  .search-animation { width:90px; height:90px; margin:0 auto 20px; position:relative; }
-  .search-animation .car-icon {
-    position:absolute; inset:0;
-    display:flex; align-items:center; justify-content:center;
-    font-size:32px; color:var(--accent);
-  }
-  .search-animation .ring {
-    position:absolute; inset:0;
-    border:2px solid var(--accent); border-radius:50%;
-    animation: pulse 2s infinite;
-  }
-  .search-animation .ring:nth-child(2) { animation-delay:0.5s; }
-  .search-animation .ring:nth-child(3) { animation-delay:1s; }
-  .searching-sheet h3 { font-size:18px; font-weight:700; margin-bottom:4px; }
-  .searching-sheet p { font-size:13px; color:var(--muted); margin-bottom:20px; }
-  .btn-cancel {
-    background:var(--card); border:1px solid var(--border);
-    color:var(--danger); font-size:13px; font-weight:600;
-    padding:11px 28px; border-radius:var(--radius-sm);
-    font-family:inherit; cursor:pointer;
-  }
-  .btn-cancel:active { background:var(--border); }
+/* Rating */
+.rat-sh{padding:24px 20px 28px;text-align:center}
+.rat-sh h3{font-size:18px;font-weight:800;margin-bottom:2px}
+.rat-sh .rsub{font-size:12px;color:var(--muted);margin-bottom:18px}
+.stars{display:flex;gap:4px;justify-content:center;margin-bottom:16px}
+.stars button{background:none;border:none;font-size:28px;color:var(--border);cursor:pointer;transition:color .15s,transform .15s;padding:2px}
+.stars button.active{color:var(--warning)}.stars button:active{transform:scale(1.15)}
+.rtip{background:var(--card);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px}
+.rtip label{font-size:10px;color:var(--muted);display:block;margin-bottom:6px}
+.tips{display:flex;gap:5px;justify-content:center;flex-wrap:wrap}
+.tbtn{padding:6px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--border);color:var(--fg);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+.tbtn.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-  /* ====== CONDUCTOR ====== */
-  .driver-found-sheet { padding:22px 20px 26px; }
-  .driver-header { display:flex; align-items:center; gap:13px; margin-bottom:18px; }
-  .driver-avatar {
-    width:52px; height:52px; border-radius:50%;
-    object-fit:cover; border:2px solid var(--accent);
-  }
-  .driver-info h3 { font-size:17px; font-weight:700; }
-  .driver-info .driver-car { font-size:12px; color:var(--muted); margin-top:2px; }
-  .driver-info .driver-rating {
-    font-size:11px; color:var(--warning); margin-top:3px;
-    display:flex; align-items:center; gap:4px;
-  }
-  .trip-details { background:var(--card); border-radius:var(--radius-sm); padding:14px; margin-bottom:14px; }
-  .trip-point { display:flex; align-items:flex-start; gap:10px; }
-  .trip-point + .trip-point { margin-top:8px; }
-  .tp-dot { width:10px; height:10px; border-radius:50%; margin-top:4px; flex-shrink:0; }
-  .tp-dot.green { background:var(--accent); }
-  .tp-dot.red { background:var(--danger); }
-  .tp-text { font-size:12px; line-height:1.4; }
-  .tp-sub { font-size:10px; color:var(--muted); }
-  .trip-meta {
-    display:flex; gap:16px; margin-top:12px;
-    padding-top:12px; border-top:1px solid var(--border);
-  }
-  .trip-meta-item { flex:1; text-align:center; }
-  .tm-val { font-size:15px; font-weight:800; color:var(--accent-light); }
-  .tm-label { font-size:10px; color:var(--muted); margin-top:1px; }
-  .driver-actions { display:flex; gap:8px; }
-  .act-btn {
-    flex:1; height:46px; border-radius:var(--radius-sm);
-    display:flex; align-items:center; justify-content:center;
-    gap:7px; font-size:12px; font-weight:600;
-    font-family:inherit; cursor:pointer; border:none;
-  }
-  .act-btn:active { transform:scale(0.97); }
-  .act-btn.call { background:var(--brand-gradient); color:#fff; }
-  .act-btn.chat { background:var(--card); color:var(--fg); border:1px solid var(--border); }
+/* ===== DRIVER REGISTRATION ===== */
+#driverReg{background:var(--bg);overflow-y:auto}
+.reg-top{padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);background:var(--surface)}
+.reg-top img{width:36px;height:36px;object-fit:contain}
+.reg-top h2{font-size:16px;font-weight:800}
+.stepper{display:flex;align-items:center;justify-content:center;padding:16px 18px;gap:0}
+.step-d{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;transition:all .2s}
+.step-d.act{background:var(--accent);color:#fff}.step-d.don{background:var(--accent);color:#fff}.step-d.pen{background:var(--card);color:var(--muted)}
+.step-l{width:20px;height:2px;background:var(--border);transition:background .2s}
+.step-l.don{background:var(--accent)}
+.reg-body{padding:18px;flex:1;overflow-y:auto}
+.step-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.step-sub{font-size:11px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+.fg{margin-bottom:12px}
+.fl{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px}
+.fi{width:100%;height:42px;padding:0 12px;background:var(--card);border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--fg);font-size:13px;outline:none;transition:border-color .2s}
+.fi:focus{border-color:var(--accent)}.fi::placeholder{color:var(--border)}
+.fi-sel{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237A8B9A' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.photo-up{width:100%;aspect-ratio:16/10;border-radius:var(--radius-sm);background:var(--card);border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;transition:border-color .2s}
+.photo-up.has{border-style:solid;border-color:var(--accent)}
+.photo-up img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.photo-up .po{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;color:#fff;font-size:18px}
+.photo-up:hover .po,.photo-up:active .po{opacity:1}
+.photo-up .ph{color:var(--muted);font-size:12px;text-align:center}
+.photo-up .ph i{font-size:24px;display:block;margin-bottom:4px}
+.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.reg-nav{display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--border);background:var(--surface)}
+.reg-nav button{flex:1}
 
-  /* ====== EN VIAJE ====== */
-  .in-trip-sheet { padding:20px; text-align:center; }
-  .trip-status {
-    display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:14px;
-  }
-  .status-dot {
-    width:10px; height:10px; border-radius:50%;
-    background:var(--accent); animation: pulse 1.5s infinite;
-  }
-  .trip-progress-bar {
-    width:100%; height:4px; background:var(--card);
-    border-radius:2px; margin:14px 0; overflow:hidden;
-  }
-  .trip-progress-bar .fill {
-    height:100%; background:var(--brand-gradient);
-    border-radius:2px; transition:width 0.5s;
-  }
-  .trip-eta { font-size:30px; font-weight:900; color:var(--accent-light); }
-  .trip-eta-label { font-size:12px; color:var(--muted); margin-top:2px; }
+/* Driver status badge */
+.d-status{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700}
+.d-status.pending{background:rgba(255,183,77,.15);color:var(--warning)}
+.d-status.approved{background:rgba(14,165,160,.15);color:var(--accent-light)}
 
-  /* ====== CALIFICACIÓN ====== */
-  .rating-sheet { padding:28px 22px 32px; text-align:center; }
-  .rating-sheet h3 { font-size:20px; font-weight:800; margin-bottom:2px; }
-  .rating-sheet .rating-sub { font-size:13px; color:var(--muted); margin-bottom:22px; }
-  .stars { display:flex; gap:6px; justify-content:center; margin-bottom:18px; }
-  .stars button {
-    background:none; border:none; font-size:32px; color:var(--border);
-    cursor:pointer; transition:color 0.15s,transform 0.15s; padding:3px;
-  }
-  .stars button.active { color:var(--warning); }
-  .stars button:active { transform:scale(1.15); }
-  .rating-tip {
-    background:var(--card); border-radius:var(--radius-sm);
-    padding:14px; margin-bottom:18px;
-  }
-  .rating-tip label { font-size:11px; color:var(--muted); display:block; margin-bottom:8px; }
-  .tip-options { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; }
-  .tip-btn {
-    padding:7px 14px; border-radius:18px;
-    background:var(--surface); border:1px solid var(--border);
-    color:var(--fg); font-size:12px; font-weight:600;
-    cursor:pointer; font-family:inherit; transition:all 0.15s;
-  }
-  .tip-btn.selected { background:var(--accent); color:#fff; border-color:var(--accent); }
+/* Driver Dashboard panels */
+.dd-panel{padding:18px;text-align:center}
+.dd-panel .ddi{font-size:36px;color:var(--accent);margin-bottom:14px}
+.dd-panel h3{font-size:16px;font-weight:700;margin-bottom:4px}
+.dd-panel p{font-size:12px;color:var(--muted)}
+.earnings-bar{display:flex;gap:10px;margin:14px 0}
+.earn-card{flex:1;background:var(--card);border-radius:var(--radius-sm);padding:12px 8px;text-align:center}
+.earn-card .ev{font-size:16px;font-weight:800;color:var(--accent-light)}
+.earn-card .el{font-size:9px;color:var(--muted);margin-top:2px}
+.incoming-card{background:var(--card);border-radius:var(--radius);padding:16px;margin:10px 0;text-align:left}
+.incoming-card .ic-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.incoming-card .ic-avatar{width:38px;height:38px;border-radius:50%;background:var(--brand-grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff}
+.incoming-card .ic-name{font-size:13px;font-weight:700}
+.incoming-card .ic-rating{font-size:10px;color:var(--warning)}
+.incoming-card .ic-route{font-size:11px;color:var(--muted);margin-bottom:3px;display:flex;align-items:center;gap:6px}
+.incoming-card .ic-route i{color:var(--accent);font-size:10px;width:14px}
+.incoming-card .ic-fare{font-size:18px;font-weight:800;color:var(--accent-light);text-align:right;margin:8px 0}
+.incoming-card .ic-actions{display:flex;gap:8px}
 
-  /* ====== TOAST ====== */
-  .toast {
-    position:fixed; top:16px; left:50%; transform:translateX(-50%);
-    z-index:400; background:var(--card); border:1px solid var(--border);
-    padding:10px 18px; border-radius:var(--radius-sm);
-    font-size:12px; font-weight:600;
-    box-shadow:0 6px 20px rgba(0,0,0,0.5);
-    animation:fadeInUp 0.3s ease; display:none; white-space:nowrap;
-  }
-  .toast.show { display:block; }
-  .toast.error { border-color:var(--danger); color:var(--danger); }
-  .toast.success { border-color:var(--accent); color:var(--accent-light); }
+/* Menu */
+.menu-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;display:none}
+.menu-ov.show{display:block}
+.smenu{position:fixed;top:0;left:0;bottom:0;width:280px;background:var(--surface);z-index:51;transform:translateX(-100%);transition:transform .3s;padding:18px 0;overflow-y:auto}
+.smenu.open{transform:translateX(0)}
+.mh{padding:0 18px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.mh img{width:40px;height:40px;object-fit:contain}
+.mh .mn{font-size:14px;font-weight:700}.mh .mp{font-size:10px;color:var(--muted)}
+.mi{display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer;transition:background .15s}
+.mi:active{background:var(--card)}
+.mi i{width:18px;text-align:center;color:var(--muted);font-size:14px}
+.mi span{font-size:12px;font-weight:500}
+.mdiv{height:1px;background:var(--border);margin:5px 18px}
 
-  /* ====== MENÚ LATERAL ====== */
-  .menu-overlay {
-    position:fixed; inset:0; background:rgba(0,0,0,0.6);
-    z-index:50; display:none;
-  }
-  .menu-overlay.show { display:block; }
-  .side-menu {
-    position:fixed; top:0; left:0; bottom:0; width:290px;
-    background:var(--surface); z-index:51;
-    transform:translateX(-100%); transition:transform 0.3s ease;
-    padding:20px 0; overflow-y:auto;
-  }
-  .side-menu.open { transform:translateX(0); }
-  .menu-header {
-    padding:0 20px 18px; border-bottom:1px solid var(--border);
-    display:flex; align-items:center; gap:13px;
-  }
-  .menu-header img {
-    width:44px; height:44px; object-fit:contain;
-  }
-  .m-name { font-size:15px; font-weight:700; }
-  .m-phone { font-size:11px; color:var(--muted); }
-  .menu-items { padding:10px 0; }
-  .menu-item {
-    display:flex; align-items:center; gap:13px;
-    padding:13px 20px; cursor:pointer; transition:background 0.15s;
-  }
-  .menu-item:active { background:var(--card); }
-  .menu-item i { width:20px; text-align:center; color:var(--muted); font-size:15px; }
-  .menu-item span { font-size:13px; font-weight:500; }
-  .menu-divider { height:1px; background:var(--border); margin:6px 20px; }
-
-  ::-webkit-scrollbar { width:3px; }
-  ::-webkit-scrollbar-track { background:transparent; }
-  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 </style>
 </head>
 <body>
 
-<!-- Pulsador de interrupción global -->
-<button class="stop-btn" id="stopBtn" onclick="emergencyStop()">
-  <span class="stop-label">Detener</span>
-  <i class="fas fa-stop"></i>
-</button>
-
+<!-- STOP -->
+<button class="stop-btn" id="stopBtn" onclick="emergencyStop()"><span class="stop-label">Detener</span><i class="fas fa-stop"></i></button>
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- Splash -->
+<!-- LOGO URL -->
+<!-- Se usa la URL real del logo de Unira -->
+
+<!-- ========== SPLASH ========== -->
 <div class="screen active" id="splash">
-  <div class="splash-logo-wrap">
-    <img src="https://z-cdn-media.chatglm.cn/files/3112a192-f333-49f0-9616-ef349e76055f.png?auth_key=1876523289-ce5f32c3566e42069a6a4fa00b183a47-0-461a2fe1a63a6b2423c79ead9b211dba" alt="Cooperativa Unira">
-    <h1>Cooperativa Unira</h1>
+  <div class="splash-wrap">
+    <img src="https://z-cdn-media.chatglm.cn/files/3112a192-f333-49f0-9616-ef349e76055f.png?auth_key=1876523289-ce5f32c3566e42069a6a4fa00b183a47-0-461a2fe1a63a6b2423c79ead9b211dba" alt="Unira">
+    <h1>Unira</h1>
     <p>Viajes seguros por Argentina</p>
     <div class="splash-dots"><span></span><span></span><span></span></div>
   </div>
 </div>
 
-<!-- Login -->
-<div class="screen" id="login">
-  <div class="login-header">
-    <div class="icon-back" onclick="goToSplash()"><i class="fas fa-arrow-left"></i></div>
-    <img src="https://z-cdn-media.chatglm.cn/files/3112a192-f333-49f0-9616-ef349e76055f.png?auth_key=1876523289-ce5f32c3566e42069a6a4fa00b183a47-0-461a2fe1a63a6b2423c79ead9b211dba" alt="Cooperativa Unira">
-    <h2>Ingresar a Unira</h2>
-    <p>Ingresa tu numero de telefono argentino</p>
+<!-- ========== SETUP ========== -->
+<div class="screen" id="setup">
+  <div style="padding-top:20px">
+    <div style="text-align:center;margin-bottom:20px">
+      <img src="https://z-cdn-media.chatglm.cn/files/3112a192-f333-49f0-9616-ef349e76055f.png?auth_key=1876523289-ce5f32c3566e42069a6a4fa00b183a47-0-461a2fe1a63a6b2423c79ead9b211dba" alt="Unira" style="width:64px;height:64px;object-fit:contain;margin-bottom:10px">
+      <h2 style="font-size:18px;font-weight:800">Configuracion inicial</h2>
+      <p style="font-size:11px;color:var(--muted);margin-top:4px">Completá estos datos para activar la app</p>
+    </div>
+    <div class="setup-card">
+      <h3><i class="fas fa-map"></i> Google Maps API Key</h3>
+      <p>Necesitás una clave de API de Google Maps para el funcionamiento completo del mapa, autocomplete de direcciones y rutas reales.</p>
+      <ol>
+        <li>Ir a <strong>console.cloud.google.com</strong></li>
+        <li>Crear un proyecto (o seleccionar uno existente)</li>
+        <li>Ir a "APIs y servicios" → "Biblioteca"</li>
+        <li>Habilitar: <strong>Maps JavaScript API</strong>, <strong>Places API</strong>, <strong>Directions API</strong></li>
+        <li>Ir a "Credenciales" → "Crear credenciales" → "Clave de API"</li>
+        <li>Restringir a tu dominio de GitHub Pages</li>
+        <li>Copiar y pegar la clave abajo</li>
+      </ol>
+      <input class="setup-input" id="setupMapsKey" placeholder="AIzaSy...">
+      <p class="setup-note">Si no ponés clave, la app funciona con OpenStreetMap (sin autocomplete ni rutas reales).</p>
+    </div>
+    <div class="setup-card">
+      <h3><i class="fab fa-google"></i> Google Form (Datos de Choferes)</h3>
+      <p>Los datos de los choferes se envían automáticamente a un Google Form que vos creás. Luego podés verlos en Google Sheets.</p>
+      <ol>
+        <li>Ir a <strong>forms.google.com</strong> y crear un formulario</li>
+        <li>Agregar estos campos en orden: Nombre, DNI, Fecha Nac, Email, Tel, Direccion, Localidad, Marca Veh, Modelo Veh, Año, Patente, Color, Tipo Veh, Nro Chasis, Fecha Registro</li>
+        <li>Hacer clic en "Responder" (vista previa del formulario)</li>
+        <li>Clic derecho → "Inspeccionar" en cada campo para ver el <code>name="entry.XXXXXXX"</code></li>
+        <li>Pegar la URL del formulario abajo</li>
+      </ol>
+      <input class="setup-input" id="setupFormUrl" placeholder="https://docs.google.com/forms/d/e/...">
+      <p class="setup-note">Sin formulario, los datos se guardan localmente en el navegador del chofer.</p>
+    </div>
+    <button class="btn-p" onclick="saveSetup()" style="margin-bottom:20px">Guardar y continuar</button>
+    <button class="btn-s" onclick="skipSetup()" style="display:block;width:100%;text-align:center;margin-bottom:30px">Omitir (usar sin Google Maps ni Form)</button>
   </div>
-  <div class="phone-input-group">
-    <span class="phone-prefix">+54</span>
-    <input type="tel" id="phoneInput" placeholder="11 1234-5678" maxlength="12" oninput="formatPhone(this)">
-  </div>
-  <button class="btn-primary" id="btnSendCode" disabled onclick="sendCode()">Continuar</button>
-  <p class="login-note">Al continuar, aceptas los Terminos y Condiciones y la Politica de Privacidad de Cooperativa Unira.</p>
 </div>
 
-<!-- Verificación -->
+<!-- ========== ROLE SELECT ========== -->
+<div class="screen" id="roleSelect">
+  <div class="role-content">
+    <img src="https://z-cdn-media.chatglm.cn/files/3112a192-f333-49f0-9616-ef349e76055f.png?auth_key=1876523289-ce5f32c3566e42069a6a4fa00b183a47-0-461a2fe1a63a6b2423c79ead9b211dba" alt="Unira">
+    <h2>¿Como queres usar Unira?</h2>
+    <div class="role-cards">
+      <div class="role-card" onclick="selectRole('passenger')">
+        <div class="ri"><i class="fas fa-user"></i></div>
+        <div class="rn">Pasajero</div>
+        <div class="rd">Pedir viajes de forma segura</div>
+      </div>
+      <div class="role-card" onclick="selectRole('driver')">
+        <div class="ri"><i class="fas fa-id-badge"></i></div>
+        <div class="rn">Chofer</div>
+        <div class="rd">Conducir y ganar dinero</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== LOGIN ========== -->
+<div class="screen" id="login">
+  <div class="lhead">
+    <div class="ib" onclick="showScreen('roleSelect')"><i class="fas fa-arrow-left"></i></div>
+    <img src="https://z-cdn-media.chatglm.cn/files/3112a192-f333-49f0-9616-ef349e76055f.png?auth_key=1876523289-ce5f32c3566e42069a6a4fa00b183a47-0-461a2fe1a63a6b2423c79ead9b211dba" alt="Unira">
+    <h2 id="loginTitle">Ingresar a Unira</h2>
+    <p id="loginSub">Ingresa tu numero de telefono argentino</p>
+  </div>
+  <div class="ph-group">
+    <span class="ph-pre">+54</span>
+    <input type="tel" id="phoneInput" placeholder="11 1234-5678" maxlength="12" oninput="formatPhone(this)">
+  </div>
+  <button class="btn-p" id="btnSendCode" disabled onclick="sendCode()">Continuar</button>
+  <p class="lnote">Al continuar, aceptas los Terminos de Unira.</p>
+</div>
+
+<!-- ========== VERIFY ========== -->
 <div class="screen" id="verify">
-  <div class="login-header">
-    <div class="icon-back" onclick="showScreen('login')"><i class="fas fa-arrow-left"></i></div>
-    <img src="https://z-cdn-media.chatglm.cn/files/3112a192-f333-49f0-9616-ef349e76055f.png?auth_key=1876523289-ce5f32c3566e42069a6a4fa00b183a47-0-461a2fe1a63a6b2423c79ead9b211dba" alt="Cooperativa Unira" style="width:56px;height:56px;">
+  <div class="lhead">
+    <div class="ib" onclick="showScreen('login')"><i class="fas fa-arrow-left"></i></div>
+    <img src="https://z-cdn-media.chatglm.cn/files/3112a192-f333-49f0-9616-ef349e76055f.png?auth_key=1876523289-ce5f32c3566e42069a6a4fa00b183a47-0-461a2fe1a63a6b2423c79ead9b211dba" alt="Unira" style="width:48px;height:48px">
     <h2>Verificacion</h2>
     <p>Codigo enviado a <strong id="verifyPhone"></strong></p>
   </div>
-  <div class="code-inputs" id="codeInputs">
+  <div class="code-in" id="codeInputs">
     <input type="tel" maxlength="1" oninput="codeNext(this,0)" onkeydown="codeBack(event,this,0)">
     <input type="tel" maxlength="1" oninput="codeNext(this,1)" onkeydown="codeBack(event,this,1)">
     <input type="tel" maxlength="1" oninput="codeNext(this,2)" onkeydown="codeBack(event,this,2)">
     <input type="tel" maxlength="1" oninput="codeNext(this,3)" onkeydown="codeBack(event,this,3)">
   </div>
-  <button class="btn-primary" id="btnVerify" disabled onclick="verifyCode()">Verificar</button>
-  <p class="login-note">Codigo de prueba: <strong style="color:var(--accent-light)">1234</strong><br>No se envio SMS real (app de demostracion)</p>
+  <button class="btn-p" id="btnVerify" disabled onclick="verifyCode()">Verificar</button>
+  <p class="lnote">Codigo de prueba: <strong style="color:var(--accent-light)">1234</strong></p>
 </div>
 
-<!-- Mapa principal -->
+<!-- ========== MAP SCREEN (PASSENGERO + CHOFER) ========== -->
 <div class="screen" id="mapScreen">
   <div id="map"></div>
 
-  <div class="map-topbar">
-    <div class="user-greeting">
-      <div class="avatar" id="userAvatar">U</div>
-      <div class="greeting-text">
-        <h3 id="greetingName">Hola</h3>
-        <p id="greetingSub">¿A donde vas hoy?</p>
+  <!-- Passenger top bar -->
+  <div class="mtop" id="pTopBar">
+    <div class="ug">
+      <div class="av" id="userAvatar">U</div>
+      <div class="gt"><h3 id="greetingName">Hola</h3><p id="greetingSub">¿A donde vas hoy?</p></div>
+      <div style="flex:1"></div>
+      <div class="ibtn" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
+    </div>
+  </div>
+
+  <!-- Driver top bar (hidden by default) -->
+  <div class="dtop" id="dTopBar" style="display:none">
+    <div class="dr">
+      <div class="av" id="dAvatar">U</div>
+      <div class="dl">
+        <div class="dn" id="dName">Chofer</div>
+        <div class="ds" id="dStatusBadge"><span class="d-status pending"><i class="fas fa-clock"></i> Desconectado</span></div>
       </div>
       <div style="flex:1"></div>
-      <div class="icon-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
+      <div class="online-toggle" id="onlineToggle" onclick="toggleOnline()">
+        <span class="toggle-label" id="toggleLabel">Offline</span>
+        <div class="toggle-track" id="toggleTrack"><div class="toggle-thumb"></div></div>
+      </div>
+      <div class="ibtn" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
     </div>
   </div>
 
-  <div class="center-btn" onclick="centerMap()"><i class="fas fa-crosshairs"></i></div>
+  <div class="cbtn" onclick="centerMap()"><i class="fas fa-crosshairs"></i></div>
 
-  <!-- Panel: pedir viaje -->
-  <div class="bottom-sheet" id="sheetRequest">
-    <div class="handle"></div>
-    <div class="sheet-content">
-      <div class="route-fields">
-        <div class="route-field">
-          <div class="route-dot origin"><i class="fas fa-circle" style="font-size:8px"></i></div>
-          <input type="text" id="inputOrigin" placeholder="Punto de partida" onfocus="showSuggestions('origin')" oninput="filterSuggestions('origin')">
-        </div>
-        <div class="route-field">
-          <div class="route-dot dest"><i class="fas fa-circle" style="font-size:8px"></i></div>
-          <input type="text" id="inputDest" placeholder="¿A donde vas?" onfocus="showSuggestions('dest')" oninput="filterSuggestions('dest')">
-        </div>
+  <!-- PASSENGER SHEETS -->
+  <div class="bs" id="sheetRequest">
+    <div class="handle"></div><div class="sc">
+      <div class="rf">
+        <div class="rfd"><div class="rdot o"><i class="fas fa-circle" style="font-size:7px"></i></div><input type="text" id="inputOrigin" placeholder="Punto de partida" onfocus="showSugs('origin')" oninput="filterSugs('origin')"></div>
+        <div class="rfd"><div class="rdot d"><i class="fas fa-circle" style="font-size:7px"></i></div><input type="text" id="inputDest" placeholder="¿A donde vas?" onfocus="showSugs('dest')" oninput="filterSugs('dest')"></div>
       </div>
-      <div id="suggestionsContainer"></div>
-      <div class="vehicle-section" id="vehicleSection" style="display:none">
+      <div id="sugsC"></div>
+      <div class="vsec" id="vSec" style="display:none">
         <h4>Elegi tu viaje</h4>
-        <div class="vehicle-list" id="vehicleList"></div>
-        <div class="payment-row" onclick="togglePayment()">
-          <i class="fas fa-money-bill-wave"></i>
-          <div class="pay-info">
-            <div class="pay-label" id="payLabel">Efectivo</div>
-            <div class="pay-detail" id="payDetail">Pago en efectivo al conductor</div>
-          </div>
-          <span class="pay-change">Cambiar</span>
-        </div>
-        <button class="btn-primary" id="btnRequest" onclick="requestTrip()">Pedir Unira</button>
+        <div class="vlist" id="vList"></div>
+        <div class="pay-row" onclick="togglePayment()"><i class="fas fa-money-bill-wave"></i><div class="pi"><div class="pl" id="payLabel">Efectivo</div><div class="pd" id="payDetail">Pago en efectivo</div></div><span class="pc">Cambiar</span></div>
+        <button class="btn-p" onclick="requestTrip()">Pedir Unira</button>
       </div>
     </div>
   </div>
+  <div class="bs" id="sheetSearching" style="display:none"><div class="handle"></div><div class="searching-sh"><div class="sa"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ci"><i class="fas fa-car"></i></div></div><h3>Buscando conductor</h3><p>Conectando con socios cercanos...</p><button class="btn-s" onclick="cancelSearch()">Cancelar</button></div></div>
+  <div class="bs" id="sheetDriver" style="display:none"><div class="handle"></div><div class="df-sh"><div class="dfh"><img class="dfav" id="drvAvatar" src="https://picsum.photos/seed/ud1/96/96.jpg" alt=""><div class="dfi"><h3 id="drvName">-</h3><div class="dc" id="drvCar">-</div><div class="drat"><i class="fas fa-star"></i><span id="drvRating">-</span></div></div></div><div class="tdet"><div class="tp"><div class="td g"></div><div><div class="tt" id="tOText">-</div><div class="ts">Partida</div></div></div><div class="tp"><div class="td r"></div><div><div class="tt" id="tDText">-</div><div class="ts">Destino</div></div></div><div class="tmeta"><div class="tmi"><div class="tmv" id="tDist">-</div><div class="tml">Distancia</div></div><div class="tmi"><div class="tmv" id="tTime">-</div><div class="tml">Duracion</div></div><div class="tmi"><div class="tmv" id="tPrice">-</div><div class="tml">Precio</div></div></div></div><div class="dacts"><button class="abtn call" onclick="simCall()"><i class="fas fa-phone"></i> Llamar</button><button class="abtn chat" onclick="simChat()"><i class="fas fa-comment"></i> Mensaje</button></div></div></div>
+  <div class="bs" id="sheetInTrip" style="display:none"><div class="handle"></div><div class="it-sh"><div class="it-st"><div class="sdot"></div><span style="font-size:13px;font-weight:600" id="tStatText">Viajando</span></div><div class="tpb"><div class="fill" id="tProg" style="width:0%"></div></div><div class="teta" id="tEta">--</div><div class="tetal">minutos estimados</div><p style="font-size:11px;color:var(--muted);margin-top:12px" id="tDestLive">-</p></div></div>
+  <div class="bs" id="sheetRating" style="display:none"><div class="handle"></div><div class="rat-sh"><h3>¿Como fue tu viaje?</h3><p class="rsub" id="ratDName">-</p><div class="stars" id="ratStars"><button onclick="setRating(1)"><i class="fas fa-star"></i></button><button onclick="setRating(2)"><i class="fas fa-star"></i></button><button onclick="setRating(3)"><i class="fas fa-star"></i></button><button onclick="setRating(4)"><i class="fas fa-star"></i></button><button onclick="setRating(5)"><i class="fas fa-star"></i></button></div><div class="rtip"><label>Propina</label><div class="tips"><button class="tbtn" onclick="selTip(this,0)">Sin propina</button><button class="tbtn" onclick="selTip(this,500)">$500</button><button class="tbtn" onclick="selTip(this,1000)">$1.000</button><button class="tbtn" onclick="selTip(this,2000)">$2.000</button></div></div><button class="btn-p" onclick="submitRating()">Confirmar</button></div></div>
 
-  <!-- Panel: buscando -->
-  <div class="bottom-sheet" id="sheetSearching" style="display:none">
-    <div class="handle"></div>
-    <div class="searching-sheet">
-      <div class="search-animation">
-        <div class="ring"></div><div class="ring"></div><div class="ring"></div>
-        <div class="car-icon"><i class="fas fa-car"></i></div>
-      </div>
-      <h3>Buscando conductor</h3>
-      <p>Conectando con socios de Unira cercanos...</p>
-      <button class="btn-cancel" onclick="cancelSearch()">Cancelar busqueda</button>
-    </div>
-  </div>
-
-  <!-- Panel: conductor encontrado -->
-  <div class="bottom-sheet" id="sheetDriver" style="display:none">
-    <div class="handle"></div>
-    <div class="driver-found-sheet">
-      <div class="driver-header">
-        <img class="driver-avatar" id="driverAvatar" src="https://picsum.photos/seed/unira-d1/104/104.jpg" alt="Conductor">
-        <div class="driver-info">
-          <h3 id="driverName">Marcos Ramirez</h3>
-          <div class="driver-car" id="driverCar">Fiat Cronos - Negro - ABC 123</div>
-          <div class="driver-rating"><i class="fas fa-star"></i><span id="driverRating">4.9</span><span style="color:var(--muted)">(1.247 viajes)</span></div>
-        </div>
-      </div>
-      <div class="trip-details">
-        <div class="trip-point"><div class="tp-dot green"></div><div><div class="tp-text" id="tripOriginText">-</div><div class="tp-sub">Partida</div></div></div>
-        <div class="trip-point"><div class="tp-dot red"></div><div><div class="tp-text" id="tripDestText">-</div><div class="tp-sub">Destino</div></div></div>
-        <div class="trip-meta">
-          <div class="trip-meta-item"><div class="tm-val" id="tripDist">-</div><div class="tm-label">Distancia</div></div>
-          <div class="trip-meta-item"><div class="tm-val" id="tripTime">-</div><div class="tm-label">Duracion</div></div>
-          <div class="trip-meta-item"><div class="tm-val" id="tripPrice">-</div><div class="tm-label">Precio</div></div>
-        </div>
-      </div>
-      <div class="driver-actions">
-        <button class="act-btn call" onclick="simulateCall()"><i class="fas fa-phone"></i> Llamar</button>
-        <button class="act-btn chat" onclick="simulateChat()"><i class="fas fa-comment"></i> Mensaje</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Panel: en viaje -->
-  <div class="bottom-sheet" id="sheetInTrip" style="display:none">
-    <div class="handle"></div>
-    <div class="in-trip-sheet">
-      <div class="trip-status"><div class="status-dot"></div><span style="font-size:14px;font-weight:600" id="tripStatusText">Viajando a destino</span></div>
-      <div class="trip-progress-bar"><div class="fill" id="tripProgress" style="width:0%"></div></div>
-      <div class="trip-eta" id="tripEta">--</div>
-      <div class="trip-eta-label">minutos estimados</div>
-      <p style="font-size:12px;color:var(--muted);margin-top:14px" id="tripDestLive">-</p>
-    </div>
-  </div>
-
-  <!-- Panel: calificación -->
-  <div class="bottom-sheet" id="sheetRating" style="display:none">
-    <div class="handle"></div>
-    <div class="rating-sheet">
-      <h3>¿Como fue tu viaje?</h3>
-      <p class="rating-sub" id="ratingDriverName">-</p>
-      <div class="stars" id="ratingStars">
-        <button onclick="setRating(1)"><i class="fas fa-star"></i></button>
-        <button onclick="setRating(2)"><i class="fas fa-star"></i></button>
-        <button onclick="setRating(3)"><i class="fas fa-star"></i></button>
-        <button onclick="setRating(4)"><i class="fas fa-star"></i></button>
-        <button onclick="setRating(5)"><i class="fas fa-star"></i></button>
-      </div>
-      <div class="rating-tip">
-        <label>¿Quieres dejar una propina?</label>
-        <div class="tip-options" id="tipOptions">
-          <button class="tip-btn" onclick="selectTip(this,0)">Sin propina</button>
-          <button class="tip-btn" onclick="selectTip(this,500)">$500</button>
-          <button class="tip-btn" onclick="selectTip(this,1000)">$1.000</button>
-          <button class="tip-btn" onclick="selectTip(this,2000)">$2.000</button>
-        </div>
-      </div>
-      <button class="btn-primary" onclick="submitRating()">Confirmar</button>
-    </div>
-  </div>
+  <!-- DRIVER DASHBOARD SHEETS -->
+  <div class="bs" id="sheetDOffline" style="display:none"><div class="handle"></div><div class="dd-panel"><div class="ddi"><i class="fas fa-power-off"></i></div><h3>Desconectado</h3><p>Activa el interruptor de arriba para comenzar a recibir solicitudes de viaje</p><div class="earnings-bar"><div class="earn-card"><div class="ev" id="earnToday">$0</div><div class="el">Hoy</div></div><div class="earn-card"><div class="ev" id="earnWeek">$0</div><div class="el">Esta semana</div></div><div class="earn-card"><div class="ev" id="earnTrips">0</div><div class="el">Viajes hoy</div></div></div></div></div>
+  <div class="bs" id="sheetDWaiting" style="display:none"><div class="handle"></div><div class="dd-panel"><div style="width:60px;height:60px;border-radius:50%;background:var(--accent);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;animation:pulse 2s infinite"><i class="fas fa-car" style="font-size:24px;color:#fff"></i></div><h3>En linea</h3><p>Esperando solicitudes de viaje...</p></div></div>
+  <div class="bs" id="sheetDIncoming" style="display:none"><div class="handle"></div><div class="sc"><div class="incoming-card"><div class="ic-top"><div class="ic-avatar" id="incAvatar">M</div><div><div class="ic-name" id="incName">Maria Garcia</div><div class="ic-rating"><i class="fas fa-star"></i> 4.8</div></div></div><div class="ic-route"><i class="fas fa-circle" style="color:var(--accent)"></i><span id="incFrom">Obelisco</span></div><div class="ic-route"><i class="fas fa-circle" style="color:var(--danger)"></i><span id="incTo">Palermo Soho</span></div><div class="ic-fare" id="incFare">$5.800</div><div class="ic-actions"><button class="abtn" style="flex:1;background:var(--brand-grad);color:#fff" onclick="acceptDriverTrip()"><i class="fas fa-check"></i> Aceptar</button><button class="abtn" style="flex:1;background:var(--card);color:var(--danger);border:1px solid var(--border)" onclick="rejectDriverTrip()"><i class="fas fa-times"></i> Rechazar</button></div></div></div></div>
+  <div class="bs" id="sheetDOnTrip" style="display:none"><div class="handle"></div><div class="it-sh"><div class="it-st"><div class="sdot"></div><span style="font-size:13px;font-weight:600" id="dtStatText">Viaje en curso</span></div><div class="tpb"><div class="fill" id="dtProg" style="width:0%"></div></div><div class="teta" id="dtEta">--</div><div class="tetal">minutos</div><p style="font-size:11px;color:var(--muted);margin-top:12px" id="dtDest">-</p></div></div>
+  <div class="bs" id="sheetDDone" style="display:none"><div class="handle"></div><div class="dd-panel"><div class="ddi" style="color:var(--accent-light)"><i class="fas fa-check-circle"></i></div><h3>Viaje completado</h3><p style="font-size:22px;font-weight:900;color:var(--accent-light);margin:12px 0" id="ddEarn">+$5.800</p><p style="font-size:11px;color:var(--muted)" id="ddDetail">-</p><button class="btn-p" onclick="driverReady()" style="margin-top:16px">Listo para el proximo viaje</button></div></div>
 </div>
 
-<!-- Menú lateral -->
-<div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
-<div class="side-menu" id="sideMenu">
-  <div class="menu-header">
+<!-- ========== DRIVER REGISTRATION ========== -->
+<div class="screen" id="driverReg">
+  <div class="reg-top">
+    <div class="ibtn" onclick="exitRegistration()"><i class="fas fa-arrow-left"></i></div>
     <img src="https://z-cdn-media.chatglm.cn/files/3112a192-f333-49f0-9616-ef349e76055f.png?auth_key=1876523289-ce5f32c3566e42069a6a4fa00b183a47-0-461a2fe1a63a6b2423c79ead9b211dba" alt="Unira">
-    <div>
-      <div class="m-name" id="menuName">Socio</div>
-      <div class="m-phone" id="menuPhone">+54 11 ....</div>
-    </div>
+    <h2>Registro de chofer</h2>
   </div>
-  <div class="menu-items">
-    <div class="menu-item" onclick="showToast('Mis viajes — Proximamente','success');toggleMenu()"><i class="fas fa-history"></i><span>Mis viajes</span></div>
-    <div class="menu-item" onclick="showToast('Metodos de pago — Proximamente','success');toggleMenu()"><i class="fas fa-credit-card"></i><span>Metodos de pago</span></div>
-    <div class="menu-item" onclick="showToast('Favoritos — Proximamente','success');toggleMenu()"><i class="fas fa-heart"></i><span>Lugares favoritos</span></div>
-    <div class="menu-item" onclick="showToast('Promociones — Proximamente','success');toggleMenu()"><i class="fas fa-tag"></i><span>Promociones</span></div>
-    <div class="menu-divider"></div>
-    <div class="menu-item" onclick="showToast('Configuracion — Proximamente','success');toggleMenu()"><i class="fas fa-cog"></i><span>Configuracion</span></div>
-    <div class="menu-item" onclick="showToast('Centro de ayuda — Proximamente','success');toggleMenu()"><i class="fas fa-question-circle"></i><span>Centro de ayuda</span></div>
-    <div class="menu-divider"></div>
-    <div class="menu-item" onclick="logout()"><i class="fas fa-sign-out-alt" style="color:var(--danger)"></i><span style="color:var(--danger)">Cerrar sesion</span></div>
+  <div class="stepper" id="stepper"></div>
+  <div class="reg-body" id="regBody"></div>
+  <div class="reg-nav" id="regNav"></div>
+</div>
+
+<!-- ========== MENU ========== -->
+<div class="menu-ov" id="menuOv" onclick="toggleMenu()"></div>
+<div class="smenu" id="smenu">
+  <div class="mh">
+    <img src="https://z-cdn-media.chatglm.cn/files/3112a192-f333-49f0-9616-ef349e76055f.png?auth_key=1876523289-ce5f32c3566e42069a6a4fa00b183a47-0-461a2fe1a63a6b2423c79ead9b211dba" alt="Unira">
+    <div><div class="mn" id="menuName">Usuario</div><div class="mp" id="menuPhone">+54 11 ....</div></div>
   </div>
+  <div class="mi" onclick="showToast('Mis viajes — Proximamente','success');toggleMenu()"><i class="fas fa-history"></i><span>Mis viajes</span></div>
+  <div class="mi" onclick="showToast('Pagos — Proximamente','success');toggleMenu()"><i class="fas fa-credit-card"></i><span>Metodos de pago</span></div>
+  <div class="mi" onclick="showToast('Favoritos — Proximamente','success');toggleMenu()"><i class="fas fa-heart"></i><span>Lugares favoritos</span></div>
+  <div class="mi" onclick="showToast('Promociones — Proximamente','success');toggleMenu()"><i class="fas fa-tag"></i><span>Promociones</span></div>
+  <div class="mdiv"></div>
+  <div class="mi" onclick="showToast('Config — Proximamente','success');toggleMenu()"><i class="fas fa-cog"></i><span>Configuracion</span></div>
+  <div class="mi" onclick="showToast('Ayuda — Proximamente','success');toggleMenu()"><i class="fas fa-question-circle"></i><span>Centro de ayuda</span></div>
+  <div class="mdiv"></div>
+  <div class="mi" onclick="switchRole()"><i class="fas fa-exchange-alt"></i><span id="switchRoleLabel">Cambiar a Pasajero</span></div>
+  <div class="mi" onclick="logout()"><i class="fas fa-sign-out-alt" style="color:var(--danger)"></i><span style="color:var(--danger)">Cerrar sesion</span></div>
 </div>
 
 <script>
-/* ============================
-   LOGO URL
-   ============================ */
-const LOGO_URL = 'https://z-cdn-media.chatglm.cn/files/3112a192-f333-49f0-9616-ef349e76055f.png?auth_key=1876523289-ce5f32c3566e42069a6a4fa00b183a47-0-461a2fe1a63a6b2423c79ead9b211dba';
-
-/* ============================
-   DATOS ARGENTINOS
-   ============================ */
+/* ========================================
+   CONFIGURACIÓN
+   ======================================== */
+const LOGO = 'https://z-cdn-media.chatglm.cn/files/3112a192-f333-49f0-9616-ef349e76055f.png?auth_key=1876523289-ce5f32c3566e42069a6a4fa00b183a47-0-461a2fe1a63a6b2423c79ead9b211dba';
 const BA_CENTER = [-34.6037, -58.3816];
 
+let CFG = {
+  MAPS_KEY: localStorage.getItem('unira_mk') || '',
+  FORM_URL: localStorage.getItem('unira_fu') || '',
+};
+let useGoogle = false;
+
+/* ========================================
+   DATOS
+   ======================================== */
 const places = [
-  { name:"Obelisco", address:"Av. 9 de Julio, Microcentro", lat:-34.6037, lng:-58.3816 },
-  { name:"Plaza de Mayo", address:"Hipolito Yrigoyen s/n, Microcentro", lat:-34.6081, lng:-58.3724 },
-  { name:"Casa Rosada", address:"Balcarce 50, Microcentro", lat:-34.6087, lng:-58.3721 },
-  { name:"Teatro Colon", address:"Tucuman 1171, Microcentro", lat:-34.5992, lng:-58.3820 },
-  { name:"Av. Corrientes y Florida", address:"Microcentro, CABA", lat:-34.6035, lng:-58.3764 },
-  { name:"Galerias Pacifico", address:"Florida 753, Microcentro", lat:-34.5990, lng:-58.3760 },
-  { name:"Puerto Madero", address:"Av. Ingeniero Huergo, Puerto Madero", lat:-34.6147, lng:-58.3632 },
-  { name:"Reserva Ecologica", address:"Tristan Achaval Rodriguez, Puerto Madero", lat:-34.6170, lng:-58.3530 },
-  { name:"La Biela", address:"Av. Quintana 600, Recoleta", lat:-34.5880, lng:-58.3930 },
-  { name:"Cementerio de Recoleta", address:"Junin 1760, Recoleta", lat:-34.5865, lng:-58.3920 },
-  { name:"Plaza Francia", address:"Av. Libertador y Pueyrredon, Recoleta", lat:-34.5875, lng:-58.3940 },
-  { name:"Palermo Soho", address:"Av. Cordoba y Honduras, Palermo", lat:-34.5860, lng:-58.4120 },
-  { name:"Plaza Serrano", address:"Honduras 4000, Palermo", lat:-34.5870, lng:-58.4160 },
-  { name:"Jardin Botanico", address:"Av. Santa Fe 3951, Palermo", lat:-34.5835, lng:-58.4070 },
-  { name:"Jardin Japones", address:"Av. Casares 3200, Palermo", lat:-34.5815, lng:-58.4100 },
-  { name:"Bosques de Palermo", address:"Av. Figueroa Alcorta, Palermo", lat:-34.5775, lng:-58.4130 },
-  { name:"Planetario Galileo", address:"Av. Sarmiento, Palermo", lat:-34.5760, lng:-58.4090 },
-  { name:"Campo Argentino de Polo", address:"Av. del Libertador 4850, Palermo", lat:-34.5725, lng:-58.4100 },
-  { name:"La Rural", address:"Av. Sarmiento 2704, Palermo", lat:-34.5785, lng:-58.4040 },
-  { name:"Abasto Shopping", address:"Av. Corrientes 3247, Balvanera", lat:-34.6040, lng:-58.4040 },
-  { name:"Estacion Once", address:"Av. Pueyrredon, Balvanera", lat:-34.6070, lng:-58.4060 },
-  { name:"Caballito", address:"Av. Rivadavia y Directorio, Caballito", lat:-34.6180, lng:-58.4280 },
-  { name:"Parque Centenario", address:"Av. Directorio y Diaz Velez, Caballito", lat:-34.6150, lng:-58.4330 },
-  { name:"Flores", address:"Av. Rivadavia 7200, Flores", lat:-34.6280, lng:-58.4620 },
-  { name:"Mercado de Flores", address:"Av. Directorio 5800, Flores", lat:-34.6270, lng:-58.4580 },
-  { name:"Villa Crespo", address:"Av. Corrientes 5500, Villa Crespo", lat:-34.5970, lng:-58.4270 },
-  { name:"Almagro", address:"Av. Independencia 3000, Almagro", lat:-34.6140, lng:-58.4100 },
-  { name:"San Telmo", address:"Av. San Juan y Defensa, San Telmo", lat:-34.6200, lng:-58.3720 },
-  { name:"Feria de San Telmo", address:"Plaza Dorrego, San Telmo", lat:-34.6210, lng:-58.3700 },
-  { name:"La Boca", address:"Caminito, La Boca", lat:-34.6345, lng:-58.3635 },
-  { name:"Caminito", address:"Caminito y Magallanes, La Boca", lat:-34.6340, lng:-58.3630 },
-  { name:"La Bombonera", address:"Brandsen 805, La Boca", lat:-34.6350, lng:-58.3625 },
-  { name:"Nunez", address:"Av. Libertador 7500, Nunez", lat:-34.5580, lng:-58.4550 },
-  { name:"Monumental de River", address:"Av. Figueroa Alcorta 7597, Nunez", lat:-34.5550, lng:-58.4530 },
-  { name:"Belgrano", address:"Av. Cabildo y Juramento, Belgrano", lat:-34.5620, lng:-58.4580 },
-  { name:"Barrancas de Belgrano", address:"Av. Federico Lacroze, Belgrano", lat:-34.5640, lng:-58.4550 },
-  { name:"Villa Urquiza", address:"Av. Triunvirato 4400, Villa Urquiza", lat:-34.5800, lng:-58.4850 },
-  { name:"Aeroparque Jorge Newbery", address:"Av. Costanera Rafael Obligado, Palermo", lat:-34.5630, lng:-58.4150 },
-  { name:"Aeropuerto Ezeiza", address:"Autopista Tte. Gral. Ricchieri, Ezeiza", lat:-34.8222, lng:-58.5358 },
-  { name:"Retiro - Terminal de Omnibus", address:"Av. Antartida Argentina, Retiro", lat:-34.5960, lng:-58.3720 },
-  { name:"Plaza Italia", address:"Av. Santa Fe y Canning, Palermo", lat:-34.5830, lng:-58.4110 },
-  { name:"Paseo La Alcorta", address:"Av. Maipu y Luis Maria Campos, Belgrano", lat:-34.5670, lng:-58.4380 },
-  { name:"Dot Baires Shopping", address:"Vedia y Congreso, Saavedra", lat:-34.5740, lng:-58.4770 },
-  { name:"Parque Lezama", address:"Av. Martin Garcia y Defensa, San Telmo", lat:-34.6230, lng:-58.3680 },
-  { name:"Tecnopolis", address:"Av. General Paz y Constituyentes, Villa Gesell", lat:-34.5690, lng:-58.5010 },
-  { name:"Estadio Monumental", address:"Av. Pres. Figueroa Alcorta 7597, Nunez", lat:-34.5548, lng:-58.4527 },
+  {name:"Obelisco",address:"Av. 9 de Julio",lat:-34.6037,lng:-58.3816},
+  {name:"Plaza de Mayo",address:"Microcentro",lat:-34.6081,lng:-58.3724},
+  {name:"Teatro Colon",address:"Tucuman 1171",lat:-34.5992,lng:-58.382},
+  {name:"Puerto Madero",address:"Av. Huergo",lat:-34.6147,lng:-58.3632},
+  {name:"Recoleta",address:"Junin 1760",lat:-34.5865,lng:-58.392},
+  {name:"Palermo Soho",address:"Honduras 4000",lat:-34.587,lng:-58.416},
+  {name:"Palermo Hollywood",address:"Fitz Roy 1600",lat:-34.584,lng:-58.425},
+  {name:"Jardin Botanico",address:"Av. Santa Fe 3951",lat:-34.5835,lng:-58.407},
+  {name:"Jardin Japones",address:"Av. Casares 3200",lat:-34.5815,lng:-58.41},
+  {name:"Bosques de Palermo",address:"Av. Figueroa Alcorta",lat:-34.5775,lng:-58.413},
+  {name:"Planetario",address:"Av. Sarmiento",lat:-34.576,lng:-58.409},
+  {name:"La Rural",address:"Av. Sarmiento 2704",lat:-34.5785,lng:-58.404},
+  {name:"Abasto Shopping",address:"Av. Corrientes 3247",lat:-34.604,lng:-58.404},
+  {name:"Caballito",address:"Av. Rivadavia y Directorio",lat:-34.618,lng:-58.428},
+  {name:"Parque Centenario",address:"Caballito",lat:-34.615,lng:-58.433},
+  {name:"Flores",address:"Av. Rivadavia 7200",lat:-34.628,lng:-58.462},
+  {name:"Villa Crespo",address:"Av. Corrientes 5500",lat:-34.597,lng:-58.427},
+  {name:"Almagro",address:"Av. Independencia 3000",lat:-34.614,lng:-58.41},
+  {name:"San Telmo",address:"Defensa y Av. San Juan",lat:-34.62,lng:-58.372},
+  {name:"La Boca",address:"Caminito",lat:-34.6345,lng:-58.3635},
+  {name:"La Bombonera",address:"Brandsen 805",lat:-34.635,lng:-58.3625},
+  {name:"Nunez",address:"Av. Libertador 7500",lat:-34.558,lng:-58.455},
+  {name:"River Plate",address:"Av. Figueroa Alcorta 7597",lat:-34.555,lng:-58.453},
+  {name:"Belgrano",address:"Av. Cabildo y Juramento",lat:-34.562,lng:-58.458},
+  {name:"Villa Urquiza",address:"Av. Triunvirato 4400",lat:-34.58,lng:-58.485},
+  {name:"Aeroparque",address:"Costanera Obligado",lat:-34.563,lng:-58.415},
+  {name:"Aeropuerto Ezeiza",address:"Ezeiza",lat:-34.8222,lng:-58.5358},
+  {name:"Retiro Terminal",address:"Av. Antartida Argentina",lat:-34.596,lng:-58.372},
+  {name:"Plaza Italia",address:"Av. Santa Fe y Canning",lat:-34.583,lng:-58.411},
+  {name:"Dot Baires",address:"Saavedra",lat:-34.574,lng:-58.477},
+  {name:"Parque Lezama",address:"San Telmo",lat:-34.623,lng:-58.368},
+  {name:"Coghlan",address:"Crámer y Forest",lat:-34.57,lng:-58.468},
+  {name:"Saavedra",address:"Av. Cabildo 4500",lat:-34.575,lng:-58.475},
+  {name:"Colegiales",address:"Av. Cabildo 4800",lat:-34.578,lng:-58.47},
+  {name:"Parque Chacabuco",address:"Av. Caseros",lat:-34.626,lng:-58.405},
+  {name:"Paternal",address:"Av. San Martin",lat:-34.61,lng:-58.45},
+  {name:"Villa Luro",address:"Av. Rivadavia 9200",lat:-34.636,lng:-58.48},
+  {name:"Liniers",address:"Av. Rivadavia 11200",lat:-34.648,lng:-58.53},
+  {name:"Mataderos",address:"Av. Directorio 7200",lat:-34.645,lng:-58.505},
+  {name:"Villa Soldati",address:"Av. Roca",lat:-34.65,lng:-58.42},
+  {name:"Barracas",address:"Av. Montes de Oca",lat:-34.63,lng:-58.37},
+  {name:"Constitucion",address:"Av. Caseros 2500",lat:-34.625,lng:-58.385},
+  {name:"San Cristobal",address:"Av. Independencia 4000",lat:-34.62,lng:-58.395},
+  {name:"Balvanera",address:"Av. Corrientes 4000",lat:-34.605,lng:-58.4},
+  {name:"Congreso",address:"Av. Rivadavia 2000",lat:-34.61,lng:-58.39},
+  {name:"Tribunales",address:"Talcahuano 550",lat:-34.601,lng:-58.385},
+  {name:"Microcentro",address:"Florida y Corrientes",lat:-34.6035,lng:-58.3764},
+  {name:"Galerias Pacifico",address:"Florida 753",lat:-34.599,lng:-58.376},
+  {name:"Paseo La Alcorta",address:"Maipu y L.M. Campos",lat:-34.567,lng:-58.438},
 ];
 
 const drivers = [
-  { name:"Marcos Ramirez", car:"Fiat Cronos - Negro - ABC 123", rating:"4.9", trips:"1.247", img:"unira-d1" },
-  { name:"Luciana Torres", car:"Toyota Etios - Blanco - DEF 456", rating:"4.8", trips:"856", img:"unira-d2" },
-  { name:"Santiago Gomez", car:"Volkswagen Gol - Gris - GHI 789", rating:"4.7", trips:"2.103", img:"unira-d3" },
-  { name:"Valentina Ruiz", car:"Renault Kwid - Rojo - JKL 012", rating:"4.9", trips:"543", img:"unira-d4" },
-  { name:"Facundo Martinez", car:"Chevrolet Onix - Azul - MNO 345", rating:"4.6", trips:"1.891", img:"unira-d5" },
+  {name:"Marcos Ramirez",car:"Fiat Cronos - Negro - ABC 123",rating:"4.9",img:"ud1"},
+  {name:"Luciana Torres",car:"Toyota Etios - Blanco - DEF 456",rating:"4.8",img:"ud2"},
+  {name:"Santiago Gomez",car:"VW Gol Trend - Gris - GHI 789",rating:"4.7",img:"ud3"},
+  {name:"Valentina Ruiz",car:"Renault Kwid - Rojo - JKL 012",rating:"4.9",img:"ud4"},
+  {name:"Facundo Martinez",car:"Chevrolet Onix - Azul - MNO 345",rating:"4.6",img:"ud5"},
 ];
 
-const vehicleTypes = [
-  { id:"moto", name:"UniraMoto", desc:"Rapida y economica", icon:"fa-motorcycle", base:2500, km:180, wait:150 },
-  { id:"auto", name:"UniraAuto", desc:"Confortable y seguro", icon:"fa-car", base:3800, km:280, wait:200 },
-  { id:"premium", name:"UniraPremium", desc:"Auto nuevo, maximo confort", icon:"fa-car-side", base:6500, km:480, wait:350 },
-  { id:"van", name:"UniraFlete", desc:"Hasta 6 pasajeros", icon:"fa-van-shuttle", base:8500, km:620, wait:400 },
+const vTypes = [
+  {id:"moto",name:"UniraMoto",desc:"Rapida y economica",icon:"fa-motorcycle",base:2500,km:180,wait:150},
+  {id:"auto",name:"UniraAuto",desc:"Confortable y seguro",icon:"fa-car",base:3800,km:280,wait:200},
+  {id:"premium",name:"UniraPremium",desc:"Maximo confort",icon:"fa-car-side",base:6500,km:480,wait:350},
+  {id:"van",name:"UniraFlete",desc:"Hasta 6 pasajeros",icon:"fa-van-shuttle",base:8500,km:620,wait:400},
 ];
 
-const paymentMethods = [
-  { label:"Efectivo", detail:"Pago en efectivo al conductor", icon:"fa-money-bill-wave" },
-  { label:"Mercado Pago", detail:"**** 4521", icon:"fa-wallet" },
-  { label:"Transferencia bancaria", detail:"Banco Nacion - CVU", icon:"fa-building-columns" },
-  { label:"Tarjeta de debito", detail:"Visa **** 7832", icon:"fa-credit-card" },
+const payMethods = [
+  {label:"Efectivo",detail:"Pago en efectivo"},
+  {label:"Mercado Pago",detail:"**** 4521"},
+  {label:"Transferencia",detail:"Banco Nacion - CVU"},
+  {label:"Debito",detail:"Visa **** 7832"},
 ];
 
-/* ============================
+/* Nombres aleatorios para viajes simulados */
+const randNames = ["Maria Garcia","Juan Perez","Lucia Fernandez","Diego Lopez","Sofia Martinez","Carlos Rodriguez","Ana Torres","Pedro Sanchez","Valentina Ruiz","Martin Diaz"];
+
+/* ========================================
    ESTADO
-   ============================ */
-let state = {
-  phone:'', origin:null, dest:null,
-  selectedVehicle:'auto', selectedPayment:0,
-  rating:0, tip:0,
-  searchTimeout:null, tripInterval:null,
-  map:null, routeLine:null, driverMarker:null, userMarker:null,
-  processRunning: false,
+   ======================================== */
+let S = {
+  phone:'', mode:'passenger',
+  origin:null, dest:null, selVehicle:'auto', selPay:0, rating:0, tip:0,
+  searchTO:null, tripInt:null,
+  map:null, gMap:null, routeLine:null, dirRenderer:null, dirService:null,
+  driverMarker:null, userMarker:null, autoOrigin:null, autoDest:null,
+  // Driver
+  regStep:0, regData:{}, regPhotos:{}, isOnline:false, driverState:'offline',
+  driverTripTO:null, driverTripInt:null,
+  earnings: JSON.parse(localStorage.getItem('unira_earn') || '{"today":0,"week":0,"trips":0,"lastReset":"'+new Date().toDateString()+'"}'),
 };
 
-/* ============================
-   PULSADOR DE INTERRUPCIÓN
-   ============================ */
-function setProcessRunning(running) {
-  state.processRunning = running;
-  document.getElementById('stopBtn').classList.toggle('visible', running);
+const TOTAL_REG_STEPS = 6;
+
+/* ========================================
+   SETUP
+   ======================================== */
+function saveSetup() {
+  const mk = document.getElementById('setupMapsKey').value.trim();
+  const fu = document.getElementById('setupFormUrl').value.trim();
+  localStorage.setItem('unira_mk', mk);
+  localStorage.setItem('unira_fu', fu);
+  CFG.MAPS_KEY = mk; CFG.FORM_URL = fu;
+  showToast('Configuracion guardada', 'success');
+  setTimeout(() => showScreen('roleSelect'), 600);
 }
+function skipSetup() { showScreen('roleSelect'); }
 
-function emergencyStop() {
-  // Cortar TODOS los procesos en curso
-  clearTimeout(state.searchTimeout);
-  clearInterval(state.tripInterval);
-  state.searchTimeout = null;
-  state.tripInterval = null;
-  setProcessRunning(false);
-
-  // Limpiar marcadores de ruta
-  if (state.routeLine) { state.map.removeLayer(state.routeLine); state.routeLine = null; }
-  if (state.driverMarker) { state.map.removeLayer(state.driverMarker); state.driverMarker = null; }
-
-  // Volver al panel de request
-  hideAllSheets();
-  document.getElementById('sheetRequest').style.display = 'block';
-
-  // Resetear viaje parcial
-  state.origin = null;
-  state.dest = null;
-  document.getElementById('inputOrigin').value = '';
-  document.getElementById('inputDest').value = '';
-  document.getElementById('vehicleSection').style.display = 'none';
-  document.getElementById('suggestionsContainer').innerHTML = '';
-
-  centerMap();
-  showToast('Proceso interrumpido', 'error');
-}
-
-/* ============================
+/* ========================================
    NAVEGACIÓN
-   ============================ */
+   ======================================== */
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
-function goToSplash() {
-  showScreen('splash');
-  setTimeout(() => showScreen('login'), 800);
+
+/* ========================================
+   SPLASH → SETUP o ROLE
+   ======================================== */
+setTimeout(() => {
+  if (!CFG.MAPS_KEY && !CFG.FORM_URL && !localStorage.getItem('unira_setup_done')) {
+    showScreen('setup');
+  } else {
+    showScreen('roleSelect');
+  }
+}, 2200);
+
+/* ========================================
+   ROLE SELECT
+   ======================================== */
+function selectRole(role) {
+  S.mode = role;
+  document.getElementById('switchRoleLabel').textContent = role === 'passenger' ? 'Cambiar a Chofer' : 'Cambiar a Pasajero';
+  if (role === 'driver') {
+    document.getElementById('loginTitle').textContent = 'Registro de chofer';
+    document.getElementById('loginSub').textContent = 'Ingresa tu telefono para comenzar';
+  } else {
+    document.getElementById('loginTitle').textContent = 'Ingresar a Unira';
+    document.getElementById('loginSub').textContent = 'Ingresa tu numero de telefono argentino';
+  }
+  showScreen('login');
 }
 
-/* ============================
-   SPLASH
-   ============================ */
-setTimeout(() => showScreen('login'), 2500);
+function switchRole() {
+  toggleMenu();
+  emergencyStop();
+  const newRole = S.mode === 'passenger' ? 'driver' : 'passenger';
+  // Limpiar mapa
+  if (S.map) { S.map.remove(); S.map = null; S.gMap = null; S.userMarker = null; S.driverMarker = null; S.routeLine = null; }
+  hideAllSheets();
+  S.origin = null; S.dest = null;
+  S.isOnline = false; S.driverState = 'offline';
+  selectRole(newRole);
+}
 
-/* ============================
+/* ========================================
    LOGIN
-   ============================ */
+   ======================================== */
 function formatPhone(input) {
-  let val = input.value.replace(/\D/g,'');
-  if (val.length > 2) val = val.substring(0,2) + ' ' + val.substring(2);
-  if (val.length > 7) val = val.substring(0,7) + '-' + val.substring(7,11);
-  input.value = val;
+  let v = input.value.replace(/\D/g,'');
+  if (v.length > 2) v = v.substring(0,2)+' '+v.substring(2);
+  if (v.length > 7) v = v.substring(0,7)+'-'+v.substring(7,11);
+  input.value = v;
   document.getElementById('btnSendCode').disabled = input.value.replace(/\D/g,'').length < 10;
 }
 
 function sendCode() {
-  const raw = document.getElementById('phoneInput').value.replace(/\D/g,'');
-  if (raw.length < 10) return;
-  state.phone = '+54 ' + document.getElementById('phoneInput').value;
-  document.getElementById('verifyPhone').textContent = state.phone;
+  if (document.getElementById('phoneInput').value.replace(/\D/g,'').length < 10) return;
+  S.phone = '+54 '+document.getElementById('phoneInput').value;
+  document.getElementById('verifyPhone').textContent = S.phone;
   showScreen('verify');
   setTimeout(() => document.querySelector('#codeInputs input').focus(), 300);
 }
 
-/* ============================
-   VERIFICACIÓN
-   ============================ */
-function codeNext(input, idx) {
-  input.value = input.value.replace(/\D/g,'');
-  if (input.value && idx < 3) document.querySelectorAll('#codeInputs input')[idx+1].focus();
-  checkCodeComplete();
-}
-function codeBack(e, input, idx) {
-  if (e.key === 'Backspace' && !input.value && idx > 0) document.querySelectorAll('#codeInputs input')[idx-1].focus();
-}
-function checkCodeComplete() {
-  let code = '';
-  document.querySelectorAll('#codeInputs input').forEach(i => code += i.value);
-  document.getElementById('btnVerify').disabled = code.length < 4;
-}
-function verifyCode() {
-  let code = '';
-  document.querySelectorAll('#codeInputs input').forEach(i => code += i.value);
-  if (code === '1234') {
-    showToast('Telefono verificado', 'success');
-    initApp();
+/* ========================================
+   VERIFY
+   ======================================== */
+function codeNext(inp,i){inp.value=inp.value.replace(/\D/g,'');if(inp.value&&i<3)document.querySelectorAll('#codeInputs input')[i+1].focus();chkCode()}
+function codeBack(e,inp,i){if(e.key==='Backspace'&&!inp.value&&i>0)document.querySelectorAll('#codeInputs input')[i-1].focus()}
+function chkCode(){let c='';document.querySelectorAll('#codeInputs input').forEach(i=>c+=i.value);document.getElementById('btnVerify').disabled=c.length<4}
+function verifyCode(){
+  let c='';document.querySelectorAll('#codeInputs input').forEach(i=>c+=i.value);
+  if(c==='1234'){
+    localStorage.setItem('unira_setup_done','1');
+    showToast('Verificado','success');
+    afterLogin();
   } else {
-    showToast('Codigo incorrecto. Usá 1234', 'error');
-    document.querySelectorAll('#codeInputs input').forEach(i => i.value = '');
+    showToast('Codigo incorrecto. Usá 1234','error');
+    document.querySelectorAll('#codeInputs input').forEach(i=>i.value='');
     document.querySelectorAll('#codeInputs input')[0].focus();
-    document.getElementById('btnVerify').disabled = true;
+    document.getElementById('btnVerify').disabled=true;
   }
 }
 
-/* ============================
-   INICIALIZAR APP
-   ============================ */
-function initApp() {
-  const h = new Date().getHours();
-  let g = 'Hola';
-  if (h < 12) g = 'Buenos dias';
-  else if (h < 19) g = 'Buenas tardes';
-  else g = 'Buenas noches';
-  document.getElementById('greetingName').textContent = g;
-  document.getElementById('menuPhone').textContent = state.phone;
+function afterLogin() {
+  document.getElementById('menuPhone').textContent = S.phone;
+  if (S.mode === 'driver') {
+    const regStatus = localStorage.getItem('unira_reg_status');
+    if (regStatus === 'approved') {
+      initDriverMode();
+    } else if (regStatus === 'pending') {
+      showDriverPending();
+    } else {
+      showScreen('driverReg');
+      S.regStep = 0;
+      renderRegStep();
+    }
+  } else {
+    const h = new Date().getHours();
+    document.getElementById('greetingName').textContent = h<12?'Buenos dias':h<19?'Buenas tardes':'Buenas noches';
+    showScreen('mapScreen');
+    initMap();
+    showPassengerSheets();
+  }
+}
 
+function showDriverPending() {
   showScreen('mapScreen');
   initMap();
+  document.getElementById('pTopBar').style.display = 'none';
+  document.getElementById('dTopBar').style.display = 'flex';
+  document.getElementById('dName').textContent = 'Chofer';
+  document.getElementById('dStatusBadge').innerHTML = '<span class="d-status pending"><i class="fas fa-clock"></i> Verificacion en proceso</span>';
+  document.getElementById('onlineToggle').style.display = 'none';
+  hideAllSheets();
+  document.getElementById('sheetDOffline').style.display = 'block';
+  document.querySelector('#sheetDOffline h3').textContent = 'Verificacion pendiente';
+  document.querySelector('#sheetDOffline p').textContent = 'Tu solicitud esta siendo revisada. Te notificaremos cuando sea aprobada. Para pruebas, tocá "Cambiar a Pasajero" en el menu.';
 }
 
-/* ============================
+/* ========================================
    MAPA
-   ============================ */
+   ======================================== */
 function initMap() {
-  if (state.map) return;
-  state.map = L.map('map', { center: BA_CENTER, zoom: 14, zoomControl: false, attributionControl: false });
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(state.map);
-
-  const userIcon = L.divIcon({
-    html: '<div style="width:16px;height:16px;background:var(--accent);border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.4);"></div>',
-    iconSize:[16,16], iconAnchor:[8,8], className:''
-  });
-  const uLat = BA_CENTER[0] + (Math.random()-0.5)*0.02;
-  const uLng = BA_CENTER[1] + (Math.random()-0.5)*0.02;
-  state.userMarker = L.marker([uLat, uLng], { icon: userIcon }).addTo(state.map);
-  state.map.setView([uLat, uLng], 15);
-
-  // Autos fantasma
-  const carIcon = L.divIcon({
-    html: '<div style="font-size:14px;color:#0EA5A0;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));"><i class="fas fa-car"></i></div>',
-    iconSize:[18,18], iconAnchor:[9,9], className:''
-  });
-  const bounds = state.map.getBounds();
-  for (let i = 0; i < 6; i++) {
-    const lat = bounds.getSouth() + Math.random()*(bounds.getNorth()-bounds.getSouth());
-    const lng = bounds.getWest() + Math.random()*(bounds.getEast()-bounds.getWest());
-    const m = L.marker([lat, lng], { icon: carIcon }).addTo(state.map);
-    setInterval(() => {
-      m.setLatLng([m.getLatLng().lat+(Math.random()-0.5)*0.003, m.getLatLng().lng+(Math.random()-0.5)*0.003]);
-    }, 3000 + Math.random()*2000);
+  if (S.map) return;
+  if (CFG.MAPS_KEY && CFG.MAPS_KEY !== 'TU_API_KEY_AQUI') {
+    loadGoogleMaps().then(() => {
+      useGoogle = true;
+      const opts = {center:{lat:BA_CENTER[0],lng:BA_CENTER[1]},zoom:14,disableDefaultUI:true,styles:DARK_MAP_STYLE};
+      S.gMap = new google.maps.Map(document.getElementById('map'), opts);
+      S.dirService = new google.maps.DirectionsService();
+      S.dirRenderer = new google.maps.DirectionsRenderer({polylineOptions:{strokeColor:'#0EA5A0',strokeWeight:5},suppressMarkers:true});
+      S.dirRenderer.setMap(S.gMap);
+      // Geolocalizar
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          const p = {lat:pos.coords.latitude,lng:pos.coords.longitude};
+          S.gMap.setCenter(p);
+          S.userMarker = new google.maps.Marker({position:p,map:S.gMap,icon:{path:google.maps.SymbolPath.CIRCLE,fillColor:'#0EA5A0',fillOpacity:1,strokeColor:'#fff',strokeWeight:2,scale:7}});
+          // Autocomplete
+          setupGAutocomplete(p);
+        }, () => { setupGAutocomplete(null); addFakeCarsG(); });
+      } else { setupGAutocomplete(null); addFakeCarsG(); }
+    }).catch(() => {
+      useGoogle = false;
+      initLeaflet();
+    });
+  } else {
+    useGoogle = false;
+    initLeaflet();
   }
 }
 
-function centerMap() {
-  if (state.userMarker) state.map.setView(state.userMarker.getLatLng(), 15);
+const DARK_MAP_STYLE = [
+  {elementType:"geometry",stylers:[{color:"#1a242e"}]},
+  {elementType:"labels.icon",stylers:[{visibility:"off"}]},
+  {elementType:"labels.text.fill",stylers:[{color:"#7a8b9a"}]},
+  {elementType:"labels.text.stroke",stylers:[{color:"#1a242e"}]},
+  {featureType:"administrative.land_parcel",stylers:[{visibility:"off"}]},
+  {featureType:"administrative.neighborhood",stylers:[{visibility:"off"}]},
+  {featureType:"road",elementType:"geometry",stylers:[{color:"#2a3642"}]},
+  {featureType:"road.highway",elementType:"geometry",stylers:[{color:"#2a3642"}]},
+  {featureType:"water",elementType:"geometry",stylers:[{color:"#0a1a22"}]},
+  {featureType:"poi",elementType:"labels",stylers:[{visibility:"off"}]},
+  {featureType:"transit",elementType:"labels",stylers:[{visibility:"off"}]},
+];
+
+function loadGoogleMaps() {
+  return new Promise((res,rej) => {
+    if (window.google && window.google.maps) { res(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://maps.googleapis.com/maps/api/js?key='+CFG.MAPS_KEY+'&libraries=places';
+    s.async = true; s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
 }
 
-/* ============================
-   SUGERENCIAS
-   ============================ */
-let activeField = null;
-function showSuggestions(field) { activeField = field; filterSuggestions(field); }
-
-function filterSuggestions(field) {
-  activeField = field;
-  const input = document.getElementById(field === 'origin' ? 'inputOrigin' : 'inputDest');
-  const q = input.value.toLowerCase().trim();
-  const c = document.getElementById('suggestionsContainer');
-  let f = places;
-  if (q.length > 0) f = places.filter(p => p.name.toLowerCase().includes(q) || p.address.toLowerCase().includes(q));
-  if (!f.length) { c.innerHTML = ''; return; }
-  c.innerHTML = '<div class="suggestions">' + f.slice(0,8).map(p =>
-    `<div class="suggestion-item" onclick="selectPlace(${p.lat},${p.lng},'${p.name.replace(/'/g,"\\'")}','${p.address.replace(/'/g,"\\'")}','${field}')">
-      <i class="fas fa-map-marker-alt"></i><div><div class="sug-text">${p.name}</div><div class="sug-sub">${p.address}</div></div>
-    </div>`
-  ).join('') + '</div>';
+function setupGAutocomplete(center) {
+  const opts = center ? {bounds:new google.maps.LatLngBounds(center,center),componentRestrictions:{country:'ar'},types:['geocode','establishment']} : {componentRestrictions:{country:'ar'},types:['geocode','establishment']};
+  S.autoOrigin = new google.maps.places.Autocomplete(document.getElementById('inputOrigin'), opts);
+  S.autoDest = new google.maps.places.Autocomplete(document.getElementById('inputDest'), opts);
+  S.autoOrigin.addListener('place_changed', () => {
+    const p = S.autoOrigin.getPlace();
+    if (p.geometry) {
+      S.origin = {name:p.name||p.formatted_address,lat:p.geometry.location.lat(),lng:p.geometry.location.lng(),address:p.formatted_address};
+      document.getElementById('inputOrigin').value = S.origin.name;
+      document.getElementById('sugsC').innerHTML = '';
+      if (S.dest) { showVehiculos(); drawRouteG(); }
+    }
+  });
+  S.autoDest.addListener('place_changed', () => {
+    const p = S.autoDest.getPlace();
+    if (p.geometry) {
+      S.dest = {name:p.name||p.formatted_address,lat:p.geometry.location.lat(),lng:p.geometry.location.lng(),address:p.formatted_address};
+      document.getElementById('inputDest').value = S.dest.name;
+      document.getElementById('sugsC').innerHTML = '';
+      if (S.origin) { showVehiculos(); drawRouteG(); }
+    }
+  });
 }
 
-function selectPlace(lat, lng, name, address, field) {
-  const input = document.getElementById(field === 'origin' ? 'inputOrigin' : 'inputDest');
-  input.value = name;
-  document.getElementById('suggestionsContainer').innerHTML = '';
-  const place = { lat, lng, name, address };
-  if (field === 'origin') { state.origin = place; if (state.userMarker) state.userMarker.setLatLng([lat, lng]); }
-  else { state.dest = place; }
-  if (state.origin && state.dest) { showVehicleOptions(); drawRoute(); }
+function addFakeCarsG() {
+  const bounds = S.gMap.getBounds();
+  for (let i=0;i<5;i++) {
+    const lat = bounds.getSouthWest().lat()+Math.random()*(bounds.getNorthEast().lat()-bounds.getSouthWest().lat());
+    const lng = bounds.getSouthWest().lng()+Math.random()*(bounds.getNorthEast().lng()-bounds.getSouthWest().lng());
+    const m = new google.maps.Marker({position:{lat,lng},map:S.gMap,icon:{path:'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z',fillColor:'#0EA5A0',fillOpacity:.8,scale:.9}});
+    setInterval(()=>{m.setPosition({lat:m.getPosition().lat()+(Math.random()-.5)*.003,lng:m.getPosition().lng()+(Math.random()-.5)*.003})},3000+Math.random()*2000);
+  }
 }
 
-/* ============================
-   VEHÍCULOS
-   ============================ */
-function showVehicleOptions() {
-  const dist = getDistance(state.origin.lat, state.origin.lng, state.dest.lat, state.dest.lng);
-  const time = Math.round(dist / 25 * 60);
-  const list = document.getElementById('vehicleList');
-  list.innerHTML = vehicleTypes.map(v => {
-    const price = Math.round(v.base + dist * v.km + time * v.wait / 60);
-    const eta = Math.max(3, Math.round(Math.random()*8 + 3));
-    return `<div class="vehicle-card ${v.id===state.selectedVehicle?'selected':''}" onclick="selectVehicle('${v.id}')">
-      <div class="v-icon"><i class="fas ${v.icon}"></i></div>
-      <div class="v-info"><div class="v-name">${v.name}</div><div class="v-desc">${v.desc}</div></div>
-      <div class="v-price"><div class="v-amount">$${formatARS(price)}</div><div class="v-time">${eta} min</div></div>
-    </div>`;
+function drawRouteG() {
+  if (!S.dirService) return;
+  S.dirService.route({origin:{lat:S.origin.lat,lng:S.origin.lng},destination:{lat:S.dest.lat,lng:S.dest.lng},travelMode:'DRIVING'},(result,status)=>{
+    if(status==='OK'){
+      S.dirRenderer.setDirections(result);
+      const leg = result.routes[0].legs[0];
+      // Actualizar precios con datos reales
+      updatePrices(leg.distance.value/1000, leg.duration.value/60);
+    }
+  });
+}
+
+function updatePrices(distKm, timeMin) {
+  const list = document.getElementById('vList');
+  list.innerHTML = vTypes.map(v => {
+    const price = Math.round(v.base + distKm * v.km + timeMin * v.wait / 60);
+    const eta = Math.max(3, Math.round(Math.random()*8+3));
+    return `<div class="vc ${v.id===S.selVehicle?'sel':''}" onclick="selVeh('${v.id}')"><div class="vi"><i class="fas ${v.icon}"></i></div><div class="vinfo"><div class="vn">${v.name}</div><div class="vd">${v.desc}</div></div><div class="vp"><div class="va">$${fARS(price)}</div><div class="vt">${eta} min</div></div></div>`;
   }).join('');
-  document.getElementById('vehicleSection').style.display = 'block';
 }
 
-function selectVehicle(id) { state.selectedVehicle = id; showVehicleOptions(); }
-
-function formatARS(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
-
-function getDistance(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const dLat = (lat2-lat1)*Math.PI/180;
-  const dLng = (lng2-lng1)*Math.PI/180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+/* LEAFLET FALLBACK */
+function initLeaflet() {
+  S.map = L.map('map',{center:BA_CENTER,zoom:14,zoomControl:false,attributionControl:false});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(S.map);
+  const uLat = BA_CENTER[0]+(Math.random()-.5)*.02, uLng = BA_CENTER[1]+(Math.random()-.5)*.02;
+  S.userMarker = L.marker([uLat,uLng],{icon:L.divIcon({html:'<div style="width:14px;height:14px;background:#0EA5A0;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 6px rgba(0,0,0,.4)"></div>',iconSize:[14,14],iconAnchor:[7,7],className:''})}).addTo(S.map);
+  S.map.setView([uLat,uLng],15);
+  const ci = L.divIcon({html:'<div style="font-size:13px;color:#0EA5A0"><i class="fas fa-car"></i></div>',iconSize:[16,16],iconAnchor:[8,8],className:''});
+  const b = S.map.getBounds();
+  for(let i=0;i<5;i++){const m=L.marker([b.getSouth()+Math.random()*(b.getNorth()-b.getSouth()),b.getWest()+Math.random()*(b.getEast()-b.getWest())],{icon:ci}).addTo(S.map);setInterval(()=>m.setLatLng([m.getLatLng().lat+(Math.random()-.5)*.003,m.getLatLng().lng+(Math.random()-.5)*.003]),3000+Math.random()*2000)}
 }
 
-/* ============================
-   RUTA EN MAPA
-   ============================ */
-function drawRoute() {
-  if (state.routeLine) state.map.removeLayer(state.routeLine);
+function drawRouteL() {
+  if (S.routeLine) S.map.removeLayer(S.routeLine);
   const pts = [];
-  for (let i = 0; i <= 30; i++) {
-    const t = i / 30;
-    const lat = state.origin.lat + (state.dest.lat - state.origin.lat) * t;
-    const lng = state.origin.lng + (state.dest.lng - state.origin.lng) * t;
-    const off = Math.sin(t * Math.PI * 3) * 0.003 * (1 - Math.abs(t-0.5)*2);
-    pts.push([lat + off, lng + off * 0.8]);
-  }
-  state.routeLine = L.polyline(pts, { color:'#0EA5A0', weight:5, opacity:0.8 }).addTo(state.map);
-  state.map.fitBounds(state.routeLine.getBounds(), { padding:[60,60] });
+  for(let i=0;i<=30;i++){const t=i/30;const lat=S.origin.lat+(S.dest.lat-S.origin.lat)*t;const lng=S.origin.lng+(S.dest.lng-S.origin.lng)*t;const o=Math.sin(t*Math.PI*3)*.003*(1-Math.abs(t-.5)*2);pts.push([lat+o,lng+o*.8])}
+  S.routeLine = L.polyline(pts,{color:'#0EA5A0',weight:5,opacity:.8}).addTo(S.map);
+  S.map.fitBounds(S.routeLine.getBounds(),{padding:[60,60]});
 }
 
-/* ============================
-   PAGO
-   ============================ */
-function togglePayment() {
-  state.selectedPayment = (state.selectedPayment + 1) % paymentMethods.length;
-  const pm = paymentMethods[state.selectedPayment];
-  document.getElementById('payLabel').textContent = pm.label;
-  document.getElementById('payDetail').textContent = pm.detail;
-  showToast('Pago: ' + pm.label, 'success');
+function drawRoute() { if(useGoogle) drawRouteG(); else drawRouteL(); }
+function centerMap() { if(useGoogle&&S.gMap) S.gMap.setCenter(S.gMap.getCenter()); else if(S.map&&S.userMarker) S.map.setView(S.userMarker.getLatLng(),15); }
+
+/* ========================================
+   PASAJERO - SUGERENCIAS (fallback)
+   ======================================== */
+let actField = null;
+function showSugs(f){actField=f;if(useGoogle)return;filterSugs(f)}
+function filterSugs(f){
+  if(useGoogle)return;
+  actField=f;
+  const inp=document.getElementById(f==='origin'?'inputOrigin':'inputDest');
+  const q=inp.value.toLowerCase().trim();
+  const c=document.getElementById('sugsC');
+  let fl=places;
+  if(q.length>0)fl=places.filter(p=>p.name.toLowerCase().includes(q)||p.address.toLowerCase().includes(q));
+  if(!fl.length){c.innerHTML='';return}
+  c.innerHTML='<div class="sugs">'+fl.slice(0,8).map(p=>`<div class="sug" onclick="selPlace(${p.lat},${p.lng},'${p.name.replace(/'/g,"\\'")}','${p.address.replace(/'/g,"\\'")}','${f}')"><i class="fas fa-map-marker-alt"></i><div><div class="st">${p.name}</div><div class="ss">${p.address}</div></div></div>`).join('')+'</div>';
+}
+function selPlace(lat,lng,name,addr,f){
+  const inp=document.getElementById(f==='origin'?'inputOrigin':'inputDest');
+  inp.value=name;document.getElementById('sugsC').innerHTML='';
+  const pl={lat,lng,name,address:addr};
+  if(f==='origin'){S.origin=pl;if(S.userMarker){if(useGoogle)S.userMarker.setPosition({lat,lng});else S.userMarker.setLatLng([lat,lng])}}
+  else S.dest=pl;
+  if(S.origin&&S.dest){showVehiculos();drawRoute()}
 }
 
-/* ============================
-   PEDIR VIAJE
-   ============================ */
-function requestTrip() {
-  if (!state.origin || !state.dest) { showToast('Completá origen y destino', 'error'); return; }
+function showVehiculos(){
+  if(useGoogle)return; // Google actualiza vía drawRouteG callback
+  const dist=getDist(S.origin.lat,S.origin.lng,S.dest.lat,S.dest.lng);
+  const time=Math.round(dist/25*60);
+  const list=document.getElementById('vList');
+  list.innerHTML=vTypes.map(v=>{const p=Math.round(v.base+dist*v.km+time*v.wait/60);const e=Math.max(3,Math.round(Math.random()*8+3));return`<div class="vc ${v.id===S.selVehicle?'sel':''}" onclick="selVeh('${v.id}')"><div class="vi"><i class="fas ${v.icon}"></i></div><div class="vinfo"><div class="vn">${v.name}</div><div class="vd">${v.desc}</div></div><div class="vp"><div class="va">$${fARS(p)}</div><div class="vt">${e} min</div></div></div>`}).join('');
+  document.getElementById('vSec').style.display='block';
+}
+function selVeh(id){S.selVehicle=id;showVehiculos()}
+
+function togglePayment(){S.selPay=(S.selPay+1)%payMethods.length;const pm=payMethods[S.selPay];document.getElementById('payLabel').textContent=pm.label;document.getElementById('payDetail').textContent=pm.detail;showToast('Pago: '+pm.label,'success')}
+
+function fARS(n){return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.')}
+function getDist(a,b,c,d){const R=6371;dA=(c-a)*Math.PI/180;dB=(d-b)*Math.PI/180;x=Math.sin(dA/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dB/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
+
+/* ========================================
+   PASAJERO - FLUJO DE VIAJE
+   ======================================== */
+function showPassengerSheets(){hideAllSheets();document.getElementById('sheetRequest').style.display='block'}
+
+function requestTrip(){
+  if(!S.origin||!S.dest){showToast('Completá origen y destino','error');return}
+  hideAllSheets();document.getElementById('sheetSearching').style.display='block';setPR(true);
+  S.searchTO=setTimeout(driverFound,4000+Math.random()*4000);
+}
+function cancelSearch(){clearTimeout(S.searchTO);S.searchTO=null;setPR(false);hideAllSheets();document.getElementById('sheetRequest').style.display='block';showToast('Cancelado','error')}
+
+function driverFound(){
+  const d=drivers[Math.floor(Math.random()*drivers.length)];
+  document.getElementById('drvAvatar').src='https://picsum.photos/seed/'+d.img+'/96/96.jpg';
+  document.getElementById('drvName').textContent=d.name;
+  document.getElementById('drvCar').textContent=d.car;
+  document.getElementById('drvRating').textContent=d.rating;
+  document.getElementById('tOText').textContent=S.origin.name;
+  document.getElementById('tDText').textContent=S.dest.name;
+  const dist=getDist(S.origin.lat,S.origin.lng,S.dest.lat,S.dest.lng);
+  const time=Math.round(dist/25*60);
+  const v=vTypes.find(vt=>vt.id===S.selVehicle);
+  const price=Math.round(v.base+dist*v.km+time*v.wait/60);
+  document.getElementById('tDist').textContent=dist<1?Math.round(dist*1000)+' m':dist.toFixed(1)+' km';
+  document.getElementById('tTime').textContent=time+' min';
+  document.getElementById('tPrice').textContent='$'+fARS(price);
+  hideAllSheets();document.getElementById('sheetDriver').style.display='block';
+  showToast('Conductor en camino','success');
+  S.searchTO=setTimeout(startPassengerTrip,5000);
+}
+
+function startPassengerTrip(){
+  hideAllSheets();document.getElementById('sheetInTrip').style.display='block';
+  const dist=getDist(S.origin.lat,S.origin.lng,S.dest.lat,S.dest.lng);
+  const totalT=Math.round(dist/25*60);
+  document.getElementById('tDestLive').textContent='Destino: '+S.dest.name;
+  let el=0;const steps=totalT*2;
+  S.tripInt=setInterval(()=>{
+    el++;const pr=Math.min(el/steps*100,100);
+    document.getElementById('tProg').style.width=pr+'%';
+    document.getElementById('tEta').textContent=Math.max(0,Math.round(totalT-el/2));
+    document.getElementById('tStatText').textContent=pr>90?'Llegando':'Viajando';
+    if(pr>=100){clearInterval(S.tripInt);S.tripInt=null;setPR(false);setTimeout(endPassengerTrip,1500)}
+  },500);
+}
+
+function endPassengerTrip(){
+  hideAllSheets();document.getElementById('sheetRating').style.display='block';
+  document.getElementById('ratDName').textContent=document.getElementById('drvName').textContent;
+  S.rating=0;S.tip=0;updStars();document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('sel'));
+  showToast('Llegaste a tu destino','success');
+}
+function setRating(n){S.rating=n;updStars()}
+function updStars(){document.querySelectorAll('#ratStars button').forEach((b,i)=>b.classList.toggle('active',i<S.rating))}
+function selTip(btn,a){S.tip=a;document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel')}
+function submitRating(){
+  if(!S.rating){showToast('Dale una puntuacion','error');return}
+  showToast('Calificacion: '+S.rating+' estrellas','success');
+  S.origin=null;S.dest=null;
+  document.getElementById('inputOrigin').value='';document.getElementById('inputDest').value='';
+  document.getElementById('vSec').style.display='none';
+  if(useGoogle&&S.dirRenderer)S.dirRenderer.setDirections({routes:[]});
+  else if(S.routeLine){S.map.removeLayer(S.routeLine);S.routeLine=null}
+  hideAllSheets();document.getElementById('sheetRequest').style.display='block';centerMap();
+}
+function simCall(){showToast('Llamando...','success')}
+function simChat(){showToast('Chat — Proximamente','success')}
+
+/* ========================================
+   MODO CHOFER - DASHBOARD
+   ======================================== */
+function initDriverMode(){
+  showScreen('mapScreen');initMap();
+  document.getElementById('pTopBar').style.display='none';
+  document.getElementById('dTopBar').style.display='flex';
+  document.getElementById('onlineToggle').style.display='flex';
+  document.getElementById('dName').textContent='Chofer Unira';
+  document.getElementById('dStatusBadge').innerHTML='<span class="d-status approved"><i class="fas fa-check-circle"></i> Aprobado</span>';
+  updateEarnings();
+  showDriverSheet('offline');
+}
+
+function showDriverSheet(state){
+  S.driverState=state;
   hideAllSheets();
-  document.getElementById('sheetSearching').style.display = 'block';
-  setProcessRunning(true);
-
-  state.searchTimeout = setTimeout(() => {
-    driverFound();
-  }, 4000 + Math.random() * 4000);
+  const sheets={offline:'sheetDOffline',waiting:'sheetDWaiting',incoming:'sheetDIncoming',ontrip:'sheetDOnTrip',done:'sheetDDone'};
+  document.getElementById(sheets[state]).style.display='block';
 }
 
-function cancelSearch() {
-  clearTimeout(state.searchTimeout);
-  state.searchTimeout = null;
-  setProcessRunning(false);
-  hideAllSheets();
-  document.getElementById('sheetRequest').style.display = 'block';
-  showToast('Busqueda cancelada', 'error');
+function toggleOnline(){
+  S.isOnline=!S.isOnline;
+  document.getElementById('toggleTrack').classList.toggle('on',S.isOnline);
+  document.getElementById('toggleLabel').classList.toggle('on',S.isOnline);
+  document.getElementById('toggleLabel').textContent=S.isOnline?'Online':'Offline';
+  document.getElementById('dStatusBadge').innerHTML=S.isOnline?'<span class="d-status approved"><i class="fas fa-signal"></i> En linea</span>':'<span class="d-status pending"><i class="fas fa-clock"></i> Desconectado</span>';
+  if(S.isOnline){showDriverSheet('waiting');setPR(true);scheduleIncomingTrip()}
+  else{clearTimeout(S.driverTripTO);clearInterval(S.driverTripInt);S.driverTripTO=null;S.driverTripInt=null;setPR(false);showDriverSheet('offline')}
 }
 
-/* ============================
-   CONDUCTOR ENCONTRADO
-   ============================ */
-function driverFound() {
-  const d = drivers[Math.floor(Math.random() * drivers.length)];
-  document.getElementById('driverAvatar').src = `https://picsum.photos/seed/${d.img}/104/104.jpg`;
-  document.getElementById('driverName').textContent = d.name;
-  document.getElementById('driverCar').textContent = d.car;
-  document.getElementById('driverRating').textContent = d.rating;
-  document.getElementById('tripOriginText').textContent = state.origin.name;
-  document.getElementById('tripDestText').textContent = state.dest.name;
-
-  const dist = getDistance(state.origin.lat, state.origin.lng, state.dest.lat, state.dest.lng);
-  const time = Math.round(dist / 25 * 60);
-  const v = vehicleTypes.find(vt => vt.id === state.selectedVehicle);
-  const price = Math.round(v.base + dist * v.km + time * v.wait / 60);
-
-  document.getElementById('tripDist').textContent = dist < 1 ? Math.round(dist*1000)+' m' : dist.toFixed(1)+' km';
-  document.getElementById('tripTime').textContent = time + ' min';
-  document.getElementById('tripPrice').textContent = '$' + formatARS(price);
-
-  hideAllSheets();
-  document.getElementById('sheetDriver').style.display = 'block';
-
-  // Marcador conductor
-  if (state.driverMarker) state.map.removeLayer(state.driverMarker);
-  const dIcon = L.divIcon({
-    html: '<div style="font-size:18px;color:#0EA5A0;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));"><i class="fas fa-car"></i></div>',
-    iconSize:[22,22], iconAnchor:[11,11], className:''
-  });
-  state.driverMarker = L.marker([
-    state.origin.lat + (Math.random()-0.5)*0.005,
-    state.origin.lng + (Math.random()-0.5)*0.005
-  ], { icon: dIcon }).addTo(state.map);
-
-  showToast('Socio de Unira en camino', 'success');
-
-  // Arrancar viaje en 5s
-  state.searchTimeout = setTimeout(() => startTrip(), 5000);
+function scheduleIncomingTrip(){
+  clearTimeout(S.driverTripTO);
+  S.driverTripTO=setTimeout(()=>{
+    if(!S.isOnline)return;
+    const from=places[Math.floor(Math.random()*places.length)];
+    let to=places[Math.floor(Math.random()*places.length)];
+    while(to.name===from.name)to=places[Math.floor(Math.random()*places.length)];
+    const dist=getDist(from.lat,from.lng,to.lat,to.lng);
+    const time=Math.round(dist/25*60);
+    const fare=Math.round(3800+dist*280+time*200/60);
+    const name=randNames[Math.floor(Math.random()*randNames.length)];
+    document.getElementById('incAvatar').textContent=name.charAt(0);
+    document.getElementById('incName').textContent=name;
+    document.getElementById('incFrom').textContent=from.name;
+    document.getElementById('incTo').textContent=to.name;
+    document.getElementById('incFare').textContent='$'+fARS(fare);
+    showDriverSheet('incoming');
+  },6000+Math.random()*10000);
 }
 
-/* ============================
-   EN VIAJE
-   ============================ */
-function startTrip() {
-  hideAllSheets();
-  document.getElementById('sheetInTrip').style.display = 'block';
-
-  const dist = getDistance(state.origin.lat, state.origin.lng, state.dest.lat, state.dest.lng);
-  const totalTime = Math.round(dist / 25 * 60);
-  document.getElementById('tripDestLive').textContent = 'Destino: ' + state.dest.name;
-
-  let elapsed = 0;
-  const totalSteps = totalTime * 2;
-
-  state.tripInterval = setInterval(() => {
-    elapsed++;
-    const progress = Math.min((elapsed / totalSteps) * 100, 100);
-    document.getElementById('tripProgress').style.width = progress + '%';
-    const remaining = Math.max(0, Math.round(totalTime - elapsed / 2));
-    document.getElementById('tripEta').textContent = remaining;
-    document.getElementById('tripStatusText').textContent = progress > 90 ? 'Llegando a destino' : 'Viajando a destino';
-
-    if (state.driverMarker && state.routeLine) {
-      const pts = state.routeLine.getLatLngs();
-      const idx = Math.min(Math.floor(progress / 100 * (pts.length - 1)), pts.length - 1);
-      state.driverMarker.setLatLng(pts[idx]);
-    }
-
-    if (progress >= 100) {
-      clearInterval(state.tripInterval);
-      state.tripInterval = null;
-      setProcessRunning(false);
-      setTimeout(() => endTrip(), 1500);
-    }
-  }, 500);
-}
-
-/* ============================
-   FIN DEL VIAJE
-   ============================ */
-function endTrip() {
-  hideAllSheets();
-  document.getElementById('sheetRating').style.display = 'block';
-  document.getElementById('ratingDriverName').textContent = document.getElementById('driverName').textContent;
-
-  if (state.routeLine) { state.map.removeLayer(state.routeLine); state.routeLine = null; }
-  if (state.driverMarker) { state.map.removeLayer(state.driverMarker); state.driverMarker = null; }
-
-  state.rating = 0; state.tip = 0;
-  updateStars();
-  document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('selected'));
-  showToast('Llegaste a tu destino', 'success');
-}
-
-/* ============================
-   CALIFICACIÓN
-   ============================ */
-function setRating(n) { state.rating = n; updateStars(); }
-function updateStars() {
-  document.querySelectorAll('#ratingStars button').forEach((b, i) => b.classList.toggle('active', i < state.rating));
-}
-function selectTip(btn, amount) {
-  state.tip = amount;
-  document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-}
-function submitRating() {
-  if (!state.rating) { showToast('Dale una puntuacion', 'error'); return; }
-  const tipTxt = state.tip > 0 ? ' + propina $' + formatARS(state.tip) : '';
-  showToast('Calificacion: ' + state.rating + ' estrellas' + tipTxt, 'success');
-  state.origin = null; state.dest = null;
-  document.getElementById('inputOrigin').value = '';
-  document.getElementById('inputDest').value = '';
-  document.getElementById('vehicleSection').style.display = 'none';
-  hideAllSheets();
-  document.getElementById('sheetRequest').style.display = 'block';
-  centerMap();
-}
-
-/* ============================
-   ACCIONES SIMULADAS
-   ============================ */
-function simulateCall() { showToast('Llamando al socio...', 'success'); }
-function simulateChat() { showToast('Chat — Proximamente', 'success'); }
-
-/* ============================
-   MENÚ
-   ============================ */
-function toggleMenu() {
-  document.getElementById('menuOverlay').classList.toggle('show');
-  document.getElementById('sideMenu').classList.toggle('open');
-}
-
-function logout() {
-  toggleMenu();
-  // Cortar procesos
-  clearTimeout(state.searchTimeout);
-  clearInterval(state.tripInterval);
-  state.searchTimeout = null; state.tripInterval = null;
-  setProcessRunning(false);
-
-  state.phone = '';
-  document.getElementById('phoneInput').value = '';
-  document.getElementById('btnSendCode').disabled = true;
-  document.querySelectorAll('#codeInputs input').forEach(i => i.value = '');
-  document.getElementById('btnVerify').disabled = true;
-
-  if (state.map) {
-    state.map.remove();
-    state.map = null; state.routeLine = null; state.driverMarker = null; state.userMarker = null;
-  }
-  hideAllSheets();
-  document.getElementById('sheetRequest').style.display = 'block';
-  showScreen('login');
-}
-
-/* ============================
-   UTILIDADES
-   ============================ */
-function hideAllSheets() {
-  ['sheetRequest','sheetSearching','sheetDriver','sheetInTrip','sheetRating'].forEach(id => {
-    document.getElementById(id).style.display = 'none';
-  });
-}
-
-function showToast(msg, type) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'toast show ' + type;
-  clearTimeout(t._to);
-  t._to = setTimeout(() => { t.className = 'toast'; }, 2800);
-}
-
-// Cerrar sugerencias al tocar fuera
-document.addEventListener('click', e => {
-  if (!e.target.closest('.route-field') && !e.target.closest('.suggestions')) {
-    document.getElementById('suggestionsContainer').innerHTML = '';
-  }
-});
-</script>
-</body>
-</html>
+function acceptDriverTrip(){
+  clearTimeout(S.driverTripTO);
+  const fromName=document.getElementById('incFrom').textContent;
+  const toName=document.getElementById('incTo').textContent;
+  const fareStr=document.getElementById('incFare').textContent;
+  showDriverSheet('ontrip');
+  document.getElementById('dtDest').textContent='Destino: '+toName;
+  const totalMin=Math.round(8+Math.random()*15);
+  let el=0;const steps=totalMin*2;
+  S.driverTripInt=setInterval(()=>{
+    el++;const pr=Math.min(el/steps*100,100);
+    document.getElementById('dtProg').style.width=pr+'%';
+    document.getElementById('dtEta').textContent=Math.max(0,Math.round(totalMin-el/2));
+    document.getElementById('dtStatText').textContent=pr>90?'Llegando':'Viaje en curso';
+    if(pr>=100){clearInterval(S.driverTripInt);S.driverTripInt=null;setPR(false);
+      const fare=parseInt(fareStr.replace(/\D/g,''))||5000;
+      S.earnings.today+=fare;S.earnings.trips++;
+      const now=new Date();const dayOfWeek=now.getDay();
+      if(dayOfWeek===1)S.earnings.week=S.earnings.today; else S.earnings.week+=fare;
+      localStorage.setItem('unira_earn',JSON.stringify(S.earnings));
+      updateEarnings();
+      document.getElementById('ddEarn').textContent='+'+fareStr;
+      document.getElementById('ddDetail').textContent=fromName
