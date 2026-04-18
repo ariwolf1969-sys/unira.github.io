@@ -3,24 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>VoyApp — Viajes en Argentina</title>
+<title>Unira - Viajes en Argentina</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
   :root {
-    --bg: #0D0D0D;
-    --surface: #1A1A1A;
-    --card: #222222;
-    --border: #333333;
-    --fg: #F5F5F0;
-    --muted: #8A8A7A;
-    --accent: #00E676;
-    --accent-dark: #00C853;
-    --accent-glow: rgba(0,230,118,0.25);
+    --bg: #0A0F14;
+    --surface: #121A22;
+    --card: #1A242E;
+    --border: #2A3642;
+    --fg: #F0F4F8;
+    --muted: #7A8B9A;
+    --brand-start: #0EA5A0;
+    --brand-end: #0C8CE9;
+    --accent: #0EA5A0;
+    --accent-light: #14D4CD;
+    --accent-glow: rgba(14,165,160,0.25);
+    --brand-gradient: linear-gradient(135deg, #0EA5A0, #0C8CE9);
     --danger: #FF5252;
-    --warning: #FFD740;
+    --warning: #FFB74D;
     --radius: 16px;
     --radius-sm: 10px;
   }
@@ -30,46 +33,63 @@
     background:var(--bg);
     color:var(--fg);
     overflow:hidden;
-    height:100dvh;
-    width:100vw;
+    height:100dvh; width:100vw;
     position:relative;
   }
 
-  /* Pantallas */
+  /* ====== PULSADOR DE INTERRUPCIÓN GLOBAL ====== */
+  .stop-btn {
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) scale(0);
+    z-index:300;
+    width:64px; height:64px; border-radius:50%;
+    background:var(--danger);
+    border:3px solid rgba(255,255,255,0.2);
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:24px; cursor:pointer;
+    box-shadow: 0 4px 24px rgba(255,82,82,0.5), 0 0 0 6px rgba(255,82,82,0.15);
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .stop-btn.visible { transform:translateX(-50%) scale(1); }
+  .stop-btn:active { transform:translateX(-50%) scale(0.9); }
+  .stop-btn .stop-label {
+    position:absolute; top:-28px; left:50%; transform:translateX(-50%);
+    background:var(--danger); color:#fff; font-size:10px; font-weight:700;
+    padding:3px 10px; border-radius:10px; white-space:nowrap;
+    letter-spacing:0.5px; text-transform:uppercase;
+  }
+
+  /* ====== PANTALLAS ====== */
   .screen {
     position:absolute; inset:0;
     display:none; flex-direction:column;
     z-index:10;
-    transition: opacity 0.3s;
   }
   .screen.active { display:flex; }
 
-  /* Splash */
+  /* ====== SPLASH ====== */
   #splash {
     background:var(--bg);
     justify-content:center; align-items:center;
     z-index:100;
   }
-  #splash .logo-container {
+  .splash-logo-wrap {
     text-align:center;
     animation: fadeInUp 0.8s ease;
   }
-  #splash .logo-icon {
-    width:90px; height:90px;
-    background: linear-gradient(135deg, var(--accent), #00BFA5);
-    border-radius:24px;
-    display:flex; align-items:center; justify-content:center;
-    margin:0 auto 20px;
-    box-shadow: 0 8px 32px var(--accent-glow);
-    font-size:40px; color:var(--bg);
+  .splash-logo-wrap img {
+    width:120px; height:120px; object-fit:contain;
+    margin-bottom:20px;
+    filter: drop-shadow(0 4px 20px var(--accent-glow));
   }
-  #splash h1 { font-size:32px; font-weight:900; letter-spacing:-1px; }
-  #splash h1 span { color:var(--accent); }
-  #splash p { color:var(--muted); margin-top:8px; font-size:14px; }
-  .splash-dots { display:flex; gap:8px; justify-content:center; margin-top:40px; }
+  .splash-logo-wrap h1 {
+    font-size:22px; font-weight:900; letter-spacing:2px; text-transform:uppercase;
+    background:var(--brand-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .splash-logo-wrap p { color:var(--muted); margin-top:6px; font-size:13px; }
+  .splash-dots { display:flex; gap:8px; justify-content:center; margin-top:36px; }
   .splash-dots span {
-    width:8px; height:8px; border-radius:50%;
-    background:var(--border);
+    width:8px; height:8px; border-radius:50%; background:var(--border);
     animation: dotPulse 1.4s infinite;
   }
   .splash-dots span:nth-child(2) { animation-delay:0.2s; }
@@ -87,116 +107,97 @@
     from { transform:translateY(100%); }
     to { transform:translateY(0); }
   }
-  @keyframes slideDown {
-    from { transform:translateY(0); }
-    to { transform:translateY(100%); }
-  }
   @keyframes pulse {
     0%,100% { transform:scale(1); opacity:1; }
     50% { transform:scale(1.08); opacity:0.7; }
   }
-  @keyframes spin { to { transform:rotate(360deg); } }
-  @keyframes carMove {
-    0% { transform: translateX(-20px) translateY(10px); opacity:0; }
-    20% { opacity:1; }
-    80% { opacity:1; }
-    100% { transform: translateX(20px) translateY(-10px); opacity:0; }
-  }
 
-  /* Login */
-  #login {
-    background:var(--bg);
-    padding:0 24px;
-    justify-content:center;
-  }
-  .login-header { text-align:center; margin-bottom:40px; }
+  /* ====== LOGIN ====== */
+  #login { background:var(--bg); padding:0 24px; justify-content:center; }
+  .login-header { text-align:center; margin-bottom:36px; }
   .login-header .icon-back {
     width:40px; height:40px; border-radius:12px;
     background:var(--card); border:1px solid var(--border);
     display:inline-flex; align-items:center; justify-content:center;
-    color:var(--fg); cursor:pointer; margin-bottom:24px;
-    font-size:16px;
+    color:var(--fg); cursor:pointer; margin-bottom:20px; font-size:16px;
   }
-  .login-header h2 { font-size:26px; font-weight:800; }
-  .login-header p { color:var(--muted); font-size:14px; margin-top:6px; line-height:1.5; }
+  .login-header img {
+    width:72px; height:72px; object-fit:contain; margin-bottom:16px;
+    filter: drop-shadow(0 2px 12px var(--accent-glow));
+  }
+  .login-header h2 { font-size:24px; font-weight:800; }
+  .login-header p { color:var(--muted); font-size:13px; margin-top:6px; line-height:1.5; }
 
   .phone-input-group {
     display:flex; align-items:center; gap:12px;
     background:var(--card); border:2px solid var(--border);
-    border-radius:var(--radius); padding:0 16px; height:58px;
+    border-radius:var(--radius); padding:0 16px; height:56px;
     transition: border-color 0.2s;
   }
   .phone-input-group:focus-within { border-color:var(--accent); }
   .phone-prefix {
-    font-size:16px; font-weight:700; color:var(--accent);
-    white-space:nowrap; padding-right:12px;
-    border-right:1px solid var(--border);
+    font-size:15px; font-weight:700; color:var(--accent);
+    white-space:nowrap; padding-right:12px; border-right:1px solid var(--border);
   }
   .phone-input-group input {
     flex:1; background:none; border:none; outline:none;
-    color:var(--fg); font-size:17px; font-family:inherit;
-    letter-spacing:1px;
+    color:var(--fg); font-size:16px; font-family:inherit; letter-spacing:1px;
   }
   .phone-input-group input::placeholder { color:var(--muted); font-weight:300; }
 
   .btn-primary {
-    width:100%; height:56px; border:none; border-radius:var(--radius);
-    background: linear-gradient(135deg, var(--accent), #00BFA5);
-    color:var(--bg); font-size:16px; font-weight:700;
-    font-family:inherit; cursor:pointer;
-    margin-top:20px;
-    transition: transform 0.15s, box-shadow 0.2s;
+    width:100%; height:54px; border:none; border-radius:var(--radius);
+    background:var(--brand-gradient);
+    color:#fff; font-size:15px; font-weight:700; font-family:inherit; cursor:pointer;
+    margin-top:18px;
     box-shadow: 0 4px 20px var(--accent-glow);
+    transition: transform 0.15s, box-shadow 0.2s;
   }
   .btn-primary:active { transform:scale(0.97); }
-  .btn-primary:disabled {
-    opacity:0.4; cursor:not-allowed;
-    transform:none; box-shadow:none;
-  }
+  .btn-primary:disabled { opacity:0.35; cursor:not-allowed; transform:none; box-shadow:none; }
 
-  .login-note {
-    text-align:center; margin-top:16px;
-    font-size:12px; color:var(--muted); line-height:1.6;
-  }
+  .login-note { text-align:center; margin-top:16px; font-size:11px; color:var(--muted); line-height:1.6; }
 
-  /* Código verificación */
+  /* ====== VERIFICACIÓN ====== */
   .code-inputs { display:flex; gap:10px; justify-content:center; margin:24px 0; }
   .code-inputs input {
-    width:52px; height:60px; text-align:center;
-    font-size:24px; font-weight:700; font-family:inherit;
+    width:50px; height:58px; text-align:center;
+    font-size:22px; font-weight:700; font-family:inherit;
     background:var(--card); border:2px solid var(--border);
-    border-radius:var(--radius-sm); color:var(--fg);
-    outline:none; transition:border-color 0.2s;
+    border-radius:var(--radius-sm); color:var(--fg); outline:none;
+    transition:border-color 0.2s;
   }
   .code-inputs input:focus { border-color:var(--accent); }
 
-  /* Mapa */
+  /* ====== MAPA ====== */
   #mapScreen { z-index:5; }
-  #map {
-    position:absolute; inset:0; z-index:1;
-  }
+  #map { position:absolute; inset:0; z-index:1; }
   .leaflet-control-zoom { display:none; }
+  .leaflet-control-attribution { display:none !important; }
 
-  /* Top bar sobre mapa */
   .map-topbar {
     position:absolute; top:0; left:0; right:0; z-index:20;
     padding:16px 16px 0;
-    background: linear-gradient(to bottom, var(--bg) 60%, transparent);
+    background: linear-gradient(to bottom, var(--bg) 55%, transparent);
     padding-bottom:20px;
   }
-  .map-topbar .user-greeting {
-    display:flex; align-items:center; gap:12px;
-  }
+  .map-topbar .user-greeting { display:flex; align-items:center; gap:12px; }
   .map-topbar .avatar {
     width:42px; height:42px; border-radius:50%;
-    background: linear-gradient(135deg, var(--accent), #00BFA5);
+    background:var(--brand-gradient);
     display:flex; align-items:center; justify-content:center;
-    font-weight:800; font-size:16px; color:var(--bg);
+    font-weight:800; font-size:16px; color:#fff;
   }
-  .map-topbar .greeting-text h3 { font-size:16px; font-weight:700; }
-  .map-topbar .greeting-text p { font-size:12px; color:var(--muted); }
+  .greeting-text h3 { font-size:15px; font-weight:700; }
+  .greeting-text p { font-size:11px; color:var(--muted); }
+  .icon-btn {
+    width:40px; height:40px; border-radius:12px;
+    background:var(--card); border:1px solid var(--border);
+    display:inline-flex; align-items:center; justify-content:center;
+    color:var(--fg); cursor:pointer; font-size:16px;
+    flex-shrink:0;
+  }
 
-  /* Botón centrar mapa */
   .center-btn {
     position:absolute; right:16px; bottom:320px; z-index:20;
     width:44px; height:44px; border-radius:50%;
@@ -206,15 +207,14 @@
     box-shadow: 0 4px 16px rgba(0,0,0,0.4);
   }
 
-  /* Panel inferior (bottom sheet) */
+  /* ====== BOTTOM SHEETS ====== */
   .bottom-sheet {
     position:absolute; bottom:0; left:0; right:0; z-index:20;
     background:var(--surface);
     border-radius:24px 24px 0 0;
     box-shadow: 0 -4px 30px rgba(0,0,0,0.5);
     animation: slideUp 0.35s ease;
-    max-height:70dvh;
-    overflow-y:auto;
+    max-height:72dvh; overflow-y:auto;
   }
   .bottom-sheet .handle {
     width:40px; height:4px; border-radius:2px;
@@ -222,290 +222,260 @@
   }
   .sheet-content { padding:16px 20px 28px; }
 
-  /* Campos de dirección */
-  .route-fields { display:flex; flex-direction:column; gap:0; }
+  /* ====== RUTA ====== */
+  .route-fields { display:flex; flex-direction:column; }
   .route-field {
     display:flex; align-items:center; gap:12px;
-    padding:14px 0;
-    position:relative;
+    padding:13px 0; position:relative;
   }
   .route-field:not(:last-child)::after {
-    content:''; position:absolute;
-    left:15px; top:42px; bottom:-2px;
+    content:''; position:absolute; left:15px; top:40px; bottom:-2px;
     width:2px; background:var(--border);
   }
   .route-dot {
     width:32px; height:32px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
-    flex-shrink:0; font-size:12px;
+    flex-shrink:0; font-size:10px;
   }
-  .route-dot.origin { background:var(--accent); color:var(--bg); }
+  .route-dot.origin { background:var(--accent); color:#fff; }
   .route-dot.dest { background:var(--card); border:2px solid var(--border); color:var(--muted); }
   .route-field input {
     flex:1; background:none; border:none; outline:none;
-    color:var(--fg); font-size:15px; font-family:inherit;
+    color:var(--fg); font-size:14px; font-family:inherit;
   }
   .route-field input::placeholder { color:var(--muted); }
 
-  /* Sugerencias de dirección */
+  /* ====== SUGERENCIAS ====== */
   .suggestions {
     background:var(--card); border-radius:var(--radius-sm);
-    margin-top:4px; overflow:hidden;
-    max-height:200px; overflow-y:auto;
+    margin-top:4px; overflow:hidden; max-height:180px; overflow-y:auto;
   }
   .suggestion-item {
-    padding:12px 14px; display:flex; align-items:center; gap:10px;
+    padding:11px 14px; display:flex; align-items:center; gap:10px;
     cursor:pointer; transition:background 0.15s;
     border-bottom:1px solid var(--border);
   }
   .suggestion-item:last-child { border:none; }
   .suggestion-item:active { background:var(--border); }
-  .suggestion-item i { color:var(--muted); font-size:14px; width:20px; text-align:center; }
-  .suggestion-item .sug-text { font-size:14px; }
+  .suggestion-item i { color:var(--accent); font-size:13px; width:18px; text-align:center; }
+  .suggestion-item .sug-text { font-size:13px; }
   .suggestion-item .sug-sub { font-size:11px; color:var(--muted); }
 
-  /* Tipos de vehículo */
-  .vehicle-section { margin-top:20px; }
-  .vehicle-section h4 { font-size:13px; color:var(--muted); font-weight:600; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px; }
-  .vehicle-list { display:flex; flex-direction:column; gap:8px; }
-  .vehicle-card {
-    display:flex; align-items:center; gap:14px;
-    padding:14px; border-radius:var(--radius-sm);
-    background:var(--card); border:2px solid transparent;
-    cursor:pointer; transition: border-color 0.2s, background 0.2s;
+  /* ====== VEHÍCULOS ====== */
+  .vehicle-section { margin-top:18px; }
+  .vehicle-section h4 {
+    font-size:11px; color:var(--muted); font-weight:700;
+    margin-bottom:10px; text-transform:uppercase; letter-spacing:0.8px;
   }
-  .vehicle-card.selected { border-color:var(--accent); background:rgba(0,230,118,0.06); }
+  .vehicle-list { display:flex; flex-direction:column; gap:7px; }
+  .vehicle-card {
+    display:flex; align-items:center; gap:13px;
+    padding:12px; border-radius:var(--radius-sm);
+    background:var(--card); border:2px solid transparent;
+    cursor:pointer; transition: border-color 0.2s;
+  }
+  .vehicle-card.selected { border-color:var(--accent); background:rgba(14,165,160,0.06); }
   .vehicle-card .v-icon {
-    width:50px; height:50px; border-radius:12px;
+    width:46px; height:46px; border-radius:12px;
     background:var(--surface); display:flex; align-items:center;
-    justify-content:center; font-size:22px;
+    justify-content:center; font-size:20px; color:var(--accent);
   }
   .vehicle-card .v-info { flex:1; }
-  .vehicle-card .v-name { font-size:14px; font-weight:700; }
-  .vehicle-card .v-desc { font-size:11px; color:var(--muted); margin-top:2px; }
+  .vehicle-card .v-name { font-size:13px; font-weight:700; }
+  .vehicle-card .v-desc { font-size:11px; color:var(--muted); margin-top:1px; }
   .vehicle-card .v-price { text-align:right; }
-  .vehicle-card .v-amount { font-size:16px; font-weight:800; color:var(--accent); }
+  .vehicle-card .v-amount { font-size:15px; font-weight:800; color:var(--accent-light); }
   .vehicle-card .v-time { font-size:11px; color:var(--muted); }
 
-  /* Métodos de pago */
+  /* ====== PAGO ====== */
   .payment-row {
     display:flex; align-items:center; gap:10px;
-    padding:12px 14px; background:var(--card);
-    border-radius:var(--radius-sm); margin-top:12px;
-    cursor:pointer;
+    padding:11px 14px; background:var(--card);
+    border-radius:var(--radius-sm); margin-top:12px; cursor:pointer;
   }
-  .payment-row i { color:var(--accent); font-size:18px; }
+  .payment-row i { color:var(--accent); font-size:16px; }
   .payment-row .pay-info { flex:1; }
-  .payment-row .pay-label { font-size:13px; font-weight:600; }
+  .payment-row .pay-label { font-size:12px; font-weight:600; }
   .payment-row .pay-detail { font-size:11px; color:var(--muted); }
-  .payment-row .pay-change { font-size:12px; color:var(--accent); font-weight:600; }
+  .payment-row .pay-change { font-size:11px; color:var(--accent); font-weight:600; }
 
-  /* Buscando conductor */
-  .searching-sheet { text-align:center; padding:40px 24px; }
-  .search-animation {
-    width:100px; height:100px; margin:0 auto 24px;
-    position:relative;
-  }
+  /* ====== BUSCANDO ====== */
+  .searching-sheet { text-align:center; padding:36px 24px; }
+  .search-animation { width:90px; height:90px; margin:0 auto 20px; position:relative; }
   .search-animation .car-icon {
     position:absolute; inset:0;
     display:flex; align-items:center; justify-content:center;
-    font-size:36px; color:var(--accent);
+    font-size:32px; color:var(--accent);
   }
   .search-animation .ring {
     position:absolute; inset:0;
-    border:2px solid var(--accent);
-    border-radius:50%;
+    border:2px solid var(--accent); border-radius:50%;
     animation: pulse 2s infinite;
   }
   .search-animation .ring:nth-child(2) { animation-delay:0.5s; }
   .search-animation .ring:nth-child(3) { animation-delay:1s; }
-  .searching-sheet h3 { font-size:20px; font-weight:700; margin-bottom:6px; }
-  .searching-sheet p { font-size:14px; color:var(--muted); margin-bottom:24px; }
+  .searching-sheet h3 { font-size:18px; font-weight:700; margin-bottom:4px; }
+  .searching-sheet p { font-size:13px; color:var(--muted); margin-bottom:20px; }
   .btn-cancel {
     background:var(--card); border:1px solid var(--border);
-    color:var(--danger); font-size:14px; font-weight:600;
-    padding:12px 32px; border-radius:var(--radius-sm);
+    color:var(--danger); font-size:13px; font-weight:600;
+    padding:11px 28px; border-radius:var(--radius-sm);
     font-family:inherit; cursor:pointer;
   }
   .btn-cancel:active { background:var(--border); }
 
-  /* Conductor encontrado */
-  .driver-found-sheet { padding:24px 20px 28px; }
-  .driver-header {
-    display:flex; align-items:center; gap:14px;
-    margin-bottom:20px;
-  }
+  /* ====== CONDUCTOR ====== */
+  .driver-found-sheet { padding:22px 20px 26px; }
+  .driver-header { display:flex; align-items:center; gap:13px; margin-bottom:18px; }
   .driver-avatar {
-    width:56px; height:56px; border-radius:50%;
+    width:52px; height:52px; border-radius:50%;
     object-fit:cover; border:2px solid var(--accent);
   }
-  .driver-info h3 { font-size:18px; font-weight:700; }
-  .driver-info .driver-car { font-size:13px; color:var(--muted); margin-top:2px; }
+  .driver-info h3 { font-size:17px; font-weight:700; }
+  .driver-info .driver-car { font-size:12px; color:var(--muted); margin-top:2px; }
   .driver-info .driver-rating {
-    font-size:12px; color:var(--warning); margin-top:4px;
+    font-size:11px; color:var(--warning); margin-top:3px;
     display:flex; align-items:center; gap:4px;
   }
-  .trip-details {
-    background:var(--card); border-radius:var(--radius-sm);
-    padding:16px; margin-bottom:16px;
-  }
-  .trip-route { display:flex; flex-direction:column; gap:8px; }
+  .trip-details { background:var(--card); border-radius:var(--radius-sm); padding:14px; margin-bottom:14px; }
   .trip-point { display:flex; align-items:flex-start; gap:10px; }
-  .trip-point .tp-dot {
-    width:10px; height:10px; border-radius:50%; margin-top:5px; flex-shrink:0;
-  }
-  .trip-point .tp-dot.green { background:var(--accent); }
-  .trip-point .tp-dot.red { background:var(--danger); }
-  .trip-point .tp-text { font-size:13px; line-height:1.4; }
-  .trip-point .tp-sub { font-size:11px; color:var(--muted); }
+  .trip-point + .trip-point { margin-top:8px; }
+  .tp-dot { width:10px; height:10px; border-radius:50%; margin-top:4px; flex-shrink:0; }
+  .tp-dot.green { background:var(--accent); }
+  .tp-dot.red { background:var(--danger); }
+  .tp-text { font-size:12px; line-height:1.4; }
+  .tp-sub { font-size:10px; color:var(--muted); }
   .trip-meta {
-    display:flex; gap:20px; margin-top:14px;
-    padding-top:14px; border-top:1px solid var(--border);
+    display:flex; gap:16px; margin-top:12px;
+    padding-top:12px; border-top:1px solid var(--border);
   }
   .trip-meta-item { flex:1; text-align:center; }
-  .trip-meta-item .tm-val { font-size:16px; font-weight:800; color:var(--accent); }
-  .trip-meta-item .tm-label { font-size:11px; color:var(--muted); margin-top:2px; }
-
-  .driver-actions { display:flex; gap:10px; }
-  .driver-actions .act-btn {
-    flex:1; height:48px; border-radius:var(--radius-sm);
+  .tm-val { font-size:15px; font-weight:800; color:var(--accent-light); }
+  .tm-label { font-size:10px; color:var(--muted); margin-top:1px; }
+  .driver-actions { display:flex; gap:8px; }
+  .act-btn {
+    flex:1; height:46px; border-radius:var(--radius-sm);
     display:flex; align-items:center; justify-content:center;
-    gap:8px; font-size:13px; font-weight:600;
+    gap:7px; font-size:12px; font-weight:600;
     font-family:inherit; cursor:pointer; border:none;
-    transition: transform 0.1s;
   }
   .act-btn:active { transform:scale(0.97); }
-  .act-btn.call { background:var(--accent); color:var(--bg); }
+  .act-btn.call { background:var(--brand-gradient); color:#fff; }
   .act-btn.chat { background:var(--card); color:var(--fg); border:1px solid var(--border); }
 
-  /* En viaje */
+  /* ====== EN VIAJE ====== */
   .in-trip-sheet { padding:20px; text-align:center; }
-  .in-trip-sheet .trip-status {
-    display:flex; align-items:center; justify-content:center; gap:8px;
-    margin-bottom:16px;
+  .trip-status {
+    display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:14px;
   }
   .status-dot {
     width:10px; height:10px; border-radius:50%;
-    background:var(--accent);
-    animation: pulse 1.5s infinite;
+    background:var(--accent); animation: pulse 1.5s infinite;
   }
   .trip-progress-bar {
     width:100%; height:4px; background:var(--card);
-    border-radius:2px; margin:16px 0; overflow:hidden;
+    border-radius:2px; margin:14px 0; overflow:hidden;
   }
   .trip-progress-bar .fill {
-    height:100%; background: linear-gradient(90deg, var(--accent), #00BFA5);
-    border-radius:2px; transition: width 0.5s;
+    height:100%; background:var(--brand-gradient);
+    border-radius:2px; transition:width 0.5s;
   }
-  .trip-eta { font-size:32px; font-weight:900; color:var(--accent); }
-  .trip-eta-label { font-size:13px; color:var(--muted); margin-top:4px; }
+  .trip-eta { font-size:30px; font-weight:900; color:var(--accent-light); }
+  .trip-eta-label { font-size:12px; color:var(--muted); margin-top:2px; }
 
-  /* Calificación */
-  .rating-sheet { padding:30px 24px 36px; text-align:center; }
-  .rating-sheet h3 { font-size:22px; font-weight:800; margin-bottom:4px; }
-  .rating-sheet .rating-sub { font-size:14px; color:var(--muted); margin-bottom:24px; }
-  .stars { display:flex; gap:8px; justify-content:center; margin-bottom:20px; }
+  /* ====== CALIFICACIÓN ====== */
+  .rating-sheet { padding:28px 22px 32px; text-align:center; }
+  .rating-sheet h3 { font-size:20px; font-weight:800; margin-bottom:2px; }
+  .rating-sheet .rating-sub { font-size:13px; color:var(--muted); margin-bottom:22px; }
+  .stars { display:flex; gap:6px; justify-content:center; margin-bottom:18px; }
   .stars button {
-    background:none; border:none; font-size:36px; color:var(--border);
-    cursor:pointer; transition: color 0.15s, transform 0.15s;
-    padding:4px;
+    background:none; border:none; font-size:32px; color:var(--border);
+    cursor:pointer; transition:color 0.15s,transform 0.15s; padding:3px;
   }
   .stars button.active { color:var(--warning); }
-  .stars button:active { transform:scale(1.2); }
+  .stars button:active { transform:scale(1.15); }
   .rating-tip {
     background:var(--card); border-radius:var(--radius-sm);
-    padding:16px; margin-bottom:20px;
+    padding:14px; margin-bottom:18px;
   }
-  .rating-tip label { font-size:12px; color:var(--muted); display:block; margin-bottom:10px; }
-  .tip-options { display:flex; gap:8px; justify-content:center; }
+  .rating-tip label { font-size:11px; color:var(--muted); display:block; margin-bottom:8px; }
+  .tip-options { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; }
   .tip-btn {
-    padding:8px 18px; border-radius:20px;
+    padding:7px 14px; border-radius:18px;
     background:var(--surface); border:1px solid var(--border);
-    color:var(--fg); font-size:13px; font-weight:600;
-    cursor:pointer; font-family:inherit; transition: all 0.15s;
+    color:var(--fg); font-size:12px; font-weight:600;
+    cursor:pointer; font-family:inherit; transition:all 0.15s;
   }
-  .tip-btn.selected { background:var(--accent); color:var(--bg); border-color:var(--accent); }
+  .tip-btn.selected { background:var(--accent); color:#fff; border-color:var(--accent); }
 
-  /* Toast */
+  /* ====== TOAST ====== */
   .toast {
-    position:fixed; top:20px; left:50%; transform:translateX(-50%);
-    z-index:200; background:var(--card); border:1px solid var(--border);
-    padding:12px 20px; border-radius:var(--radius-sm);
-    font-size:13px; font-weight:600;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-    animation: fadeInUp 0.3s ease;
-    display:none;
+    position:fixed; top:16px; left:50%; transform:translateX(-50%);
+    z-index:400; background:var(--card); border:1px solid var(--border);
+    padding:10px 18px; border-radius:var(--radius-sm);
+    font-size:12px; font-weight:600;
+    box-shadow:0 6px 20px rgba(0,0,0,0.5);
+    animation:fadeInUp 0.3s ease; display:none; white-space:nowrap;
   }
   .toast.show { display:block; }
   .toast.error { border-color:var(--danger); color:var(--danger); }
-  .toast.success { border-color:var(--accent); color:var(--accent); }
+  .toast.success { border-color:var(--accent); color:var(--accent-light); }
 
-  /* Menú lateral */
+  /* ====== MENÚ LATERAL ====== */
   .menu-overlay {
     position:fixed; inset:0; background:rgba(0,0,0,0.6);
     z-index:50; display:none;
   }
   .menu-overlay.show { display:block; }
   .side-menu {
-    position:fixed; top:0; left:0; bottom:0; width:300px;
+    position:fixed; top:0; left:0; bottom:0; width:290px;
     background:var(--surface); z-index:51;
     transform:translateX(-100%); transition:transform 0.3s ease;
-    padding:24px 0; overflow-y:auto;
+    padding:20px 0; overflow-y:auto;
   }
   .side-menu.open { transform:translateX(0); }
   .menu-header {
-    padding:0 20px 20px; border-bottom:1px solid var(--border);
-    display:flex; align-items:center; gap:14px;
+    padding:0 20px 18px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:13px;
   }
-  .menu-header .m-avatar {
-    width:50px; height:50px; border-radius:50%;
-    background:linear-gradient(135deg,var(--accent),#00BFA5);
-    display:flex; align-items:center; justify-content:center;
-    font-size:20px; font-weight:800; color:var(--bg);
+  .menu-header img {
+    width:44px; height:44px; object-fit:contain;
   }
-  .menu-header .m-name { font-size:16px; font-weight:700; }
-  .menu-header .m-phone { font-size:12px; color:var(--muted); }
-  .menu-items { padding:12px 0; }
+  .m-name { font-size:15px; font-weight:700; }
+  .m-phone { font-size:11px; color:var(--muted); }
+  .menu-items { padding:10px 0; }
   .menu-item {
-    display:flex; align-items:center; gap:14px;
-    padding:14px 20px; cursor:pointer; transition:background 0.15s;
+    display:flex; align-items:center; gap:13px;
+    padding:13px 20px; cursor:pointer; transition:background 0.15s;
   }
   .menu-item:active { background:var(--card); }
-  .menu-item i { width:22px; text-align:center; color:var(--muted); font-size:16px; }
-  .menu-item span { font-size:14px; font-weight:500; }
-  .menu-divider { height:1px; background:var(--border); margin:8px 20px; }
+  .menu-item i { width:20px; text-align:center; color:var(--muted); font-size:15px; }
+  .menu-item span { font-size:13px; font-weight:500; }
+  .menu-divider { height:1px; background:var(--border); margin:6px 20px; }
 
-  /* Animación autos en el mapa */
-  .moving-car {
-    position:absolute; z-index:15;
-    font-size:20px; color:var(--accent);
-    pointer-events:none;
-    animation: carMove 3s infinite;
-  }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar { width:3px; }
   ::-webkit-scrollbar-track { background:transparent; }
   ::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
-
-  /* Ocultar leaflet attribution para mobile */
-  .leaflet-control-attribution { display:none !important; }
 </style>
 </head>
 <body>
+
+<!-- Pulsador de interrupción global -->
+<button class="stop-btn" id="stopBtn" onclick="emergencyStop()">
+  <span class="stop-label">Detener</span>
+  <i class="fas fa-stop"></i>
+</button>
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <!-- Splash -->
 <div class="screen active" id="splash">
-  <div class="logo-container">
-    <div class="logo-icon"><i class="fas fa-location-arrow"></i></div>
-    <h1>Voy<span>App</span></h1>
+  <div class="splash-logo-wrap">
+    <img src="https://z-cdn-media.chatglm.cn/files/3112a192-f333-49f0-9616-ef349e76055f.png?auth_key=1876523289-ce5f32c3566e42069a6a4fa00b183a47-0-461a2fe1a63a6b2423c79ead9b211dba" alt="Cooperativa Unira">
+    <h1>Cooperativa Unira</h1>
     <p>Viajes seguros por Argentina</p>
-    <div class="splash-dots">
-      <span></span><span></span><span></span>
-    </div>
+    <div class="splash-dots"><span></span><span></span><span></span></div>
   </div>
 </div>
 
@@ -513,29 +483,25 @@
 <div class="screen" id="login">
   <div class="login-header">
     <div class="icon-back" onclick="goToSplash()"><i class="fas fa-arrow-left"></i></div>
-    <h2>Ingresar a VoyApp</h2>
-    <p>Ingresa tu numero de telefono argentino para continuar</p>
+    <img src="https://z-cdn-media.chatglm.cn/files/3112a192-f333-49f0-9616-ef349e76055f.png?auth_key=1876523289-ce5f32c3566e42069a6a4fa00b183a47-0-461a2fe1a63a6b2423c79ead9b211dba" alt="Cooperativa Unira">
+    <h2>Ingresar a Unira</h2>
+    <p>Ingresa tu numero de telefono argentino</p>
   </div>
   <div class="phone-input-group">
     <span class="phone-prefix">+54</span>
-    <input type="tel" id="phoneInput" placeholder="11 1234-5678" maxlength="12"
-           oninput="formatPhone(this)">
+    <input type="tel" id="phoneInput" placeholder="11 1234-5678" maxlength="12" oninput="formatPhone(this)">
   </div>
-  <button class="btn-primary" id="btnSendCode" disabled onclick="sendCode()">
-    Continuar
-  </button>
-  <p class="login-note">
-    Al continuar, aceptas los Terminos y Condiciones<br>
-    y la Politica de Privacidad de VoyApp.
-  </p>
+  <button class="btn-primary" id="btnSendCode" disabled onclick="sendCode()">Continuar</button>
+  <p class="login-note">Al continuar, aceptas los Terminos y Condiciones y la Politica de Privacidad de Cooperativa Unira.</p>
 </div>
 
 <!-- Verificación -->
 <div class="screen" id="verify">
   <div class="login-header">
     <div class="icon-back" onclick="showScreen('login')"><i class="fas fa-arrow-left"></i></div>
+    <img src="https://z-cdn-media.chatglm.cn/files/3112a192-f333-49f0-9616-ef349e76055f.png?auth_key=1876523289-ce5f32c3566e42069a6a4fa00b183a47-0-461a2fe1a63a6b2423c79ead9b211dba" alt="Cooperativa Unira" style="width:56px;height:56px;">
     <h2>Verificacion</h2>
-    <p>Ingresamos un codigo a <strong id="verifyPhone"></strong></p>
+    <p>Codigo enviado a <strong id="verifyPhone"></strong></p>
   </div>
   <div class="code-inputs" id="codeInputs">
     <input type="tel" maxlength="1" oninput="codeNext(this,0)" onkeydown="codeBack(event,this,0)">
@@ -543,13 +509,8 @@
     <input type="tel" maxlength="1" oninput="codeNext(this,2)" onkeydown="codeBack(event,this,2)">
     <input type="tel" maxlength="1" oninput="codeNext(this,3)" onkeydown="codeBack(event,this,3)">
   </div>
-  <button class="btn-primary" id="btnVerify" disabled onclick="verifyCode()">
-    Verificar
-  </button>
-  <p class="login-note">
-    Codigo de prueba: <strong style="color:var(--accent)">1234</strong><br>
-    No se envio SMS real (app de demostracion)
-  </p>
+  <button class="btn-primary" id="btnVerify" disabled onclick="verifyCode()">Verificar</button>
+  <p class="login-note">Codigo de prueba: <strong style="color:var(--accent-light)">1234</strong><br>No se envio SMS real (app de demostracion)</p>
 </div>
 
 <!-- Mapa principal -->
@@ -558,21 +519,17 @@
 
   <div class="map-topbar">
     <div class="user-greeting">
-      <div class="avatar" id="userAvatar">V</div>
+      <div class="avatar" id="userAvatar">U</div>
       <div class="greeting-text">
-        <h3 id="greetingName">Hola, Viajero</h3>
+        <h3 id="greetingName">Hola</h3>
         <p id="greetingSub">¿A donde vas hoy?</p>
       </div>
       <div style="flex:1"></div>
-      <div class="icon-back" onclick="toggleMenu()" style="margin-bottom:0">
-        <i class="fas fa-bars"></i>
-      </div>
+      <div class="icon-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
     </div>
   </div>
 
-  <div class="center-btn" onclick="centerMap()">
-    <i class="fas fa-crosshairs"></i>
-  </div>
+  <div class="center-btn" onclick="centerMap()"><i class="fas fa-crosshairs"></i></div>
 
   <!-- Panel: pedir viaje -->
   <div class="bottom-sheet" id="sheetRequest">
@@ -580,18 +537,15 @@
     <div class="sheet-content">
       <div class="route-fields">
         <div class="route-field">
-          <div class="route-dot origin"><i class="fas fa-circle" style="font-size:10px"></i></div>
-          <input type="text" id="inputOrigin" placeholder="Punto de partida"
-                 onfocus="showSuggestions('origin')" oninput="filterSuggestions('origin')">
+          <div class="route-dot origin"><i class="fas fa-circle" style="font-size:8px"></i></div>
+          <input type="text" id="inputOrigin" placeholder="Punto de partida" onfocus="showSuggestions('origin')" oninput="filterSuggestions('origin')">
         </div>
         <div class="route-field">
-          <div class="route-dot dest"><i class="fas fa-circle" style="font-size:10px"></i></div>
-          <input type="text" id="inputDest" placeholder="¿A donde vas?"
-                 onfocus="showSuggestions('dest')" oninput="filterSuggestions('dest')">
+          <div class="route-dot dest"><i class="fas fa-circle" style="font-size:8px"></i></div>
+          <input type="text" id="inputDest" placeholder="¿A donde vas?" onfocus="showSuggestions('dest')" oninput="filterSuggestions('dest')">
         </div>
       </div>
       <div id="suggestionsContainer"></div>
-
       <div class="vehicle-section" id="vehicleSection" style="display:none">
         <h4>Elegi tu viaje</h4>
         <div class="vehicle-list" id="vehicleList"></div>
@@ -603,9 +557,7 @@
           </div>
           <span class="pay-change">Cambiar</span>
         </div>
-        <button class="btn-primary" id="btnRequest" onclick="requestTrip()">
-          Pedir VoyApp
-        </button>
+        <button class="btn-primary" id="btnRequest" onclick="requestTrip()">Pedir Unira</button>
       </div>
     </div>
   </div>
@@ -615,13 +567,11 @@
     <div class="handle"></div>
     <div class="searching-sheet">
       <div class="search-animation">
-        <div class="ring"></div>
-        <div class="ring"></div>
-        <div class="ring"></div>
+        <div class="ring"></div><div class="ring"></div><div class="ring"></div>
         <div class="car-icon"><i class="fas fa-car"></i></div>
       </div>
       <h3>Buscando conductor</h3>
-      <p>Conectando con conductores cercanos...</p>
+      <p>Conectando con socios de Unira cercanos...</p>
       <button class="btn-cancel" onclick="cancelSearch()">Cancelar busqueda</button>
     </div>
   </div>
@@ -631,47 +581,20 @@
     <div class="handle"></div>
     <div class="driver-found-sheet">
       <div class="driver-header">
-        <img class="driver-avatar" id="driverAvatar" src="https://picsum.photos/seed/driver1/112/112.jpg" alt="Conductor">
+        <img class="driver-avatar" id="driverAvatar" src="https://picsum.photos/seed/unira-d1/104/104.jpg" alt="Conductor">
         <div class="driver-info">
           <h3 id="driverName">Marcos Ramirez</h3>
           <div class="driver-car" id="driverCar">Fiat Cronos - Negro - ABC 123</div>
-          <div class="driver-rating">
-            <i class="fas fa-star"></i>
-            <span id="driverRating">4.9</span>
-            <span style="color:var(--muted)">(1,247 viajes)</span>
-          </div>
+          <div class="driver-rating"><i class="fas fa-star"></i><span id="driverRating">4.9</span><span style="color:var(--muted)">(1.247 viajes)</span></div>
         </div>
       </div>
       <div class="trip-details">
-        <div class="trip-route">
-          <div class="trip-point">
-            <div class="tp-dot green"></div>
-            <div>
-              <div class="tp-text" id="tripOriginText">-</div>
-              <div class="tp-sub">Punto de partida</div>
-            </div>
-          </div>
-          <div class="trip-point">
-            <div class="tp-dot red"></div>
-            <div>
-              <div class="tp-text" id="tripDestText">-</div>
-              <div class="tp-sub">Destino</div>
-            </div>
-          </div>
-        </div>
+        <div class="trip-point"><div class="tp-dot green"></div><div><div class="tp-text" id="tripOriginText">-</div><div class="tp-sub">Partida</div></div></div>
+        <div class="trip-point"><div class="tp-dot red"></div><div><div class="tp-text" id="tripDestText">-</div><div class="tp-sub">Destino</div></div></div>
         <div class="trip-meta">
-          <div class="trip-meta-item">
-            <div class="tm-val" id="tripDist">-</div>
-            <div class="tm-label">Distancia</div>
-          </div>
-          <div class="trip-meta-item">
-            <div class="tm-val" id="tripTime">-</div>
-            <div class="tm-label">Duracion</div>
-          </div>
-          <div class="trip-meta-item">
-            <div class="tm-val" id="tripPrice">-</div>
-            <div class="tm-label">Precio</div>
-          </div>
+          <div class="trip-meta-item"><div class="tm-val" id="tripDist">-</div><div class="tm-label">Distancia</div></div>
+          <div class="trip-meta-item"><div class="tm-val" id="tripTime">-</div><div class="tm-label">Duracion</div></div>
+          <div class="trip-meta-item"><div class="tm-val" id="tripPrice">-</div><div class="tm-label">Precio</div></div>
         </div>
       </div>
       <div class="driver-actions">
@@ -685,14 +608,11 @@
   <div class="bottom-sheet" id="sheetInTrip" style="display:none">
     <div class="handle"></div>
     <div class="in-trip-sheet">
-      <div class="trip-status">
-        <div class="status-dot"></div>
-        <span style="font-size:15px;font-weight:600" id="tripStatusText">Viajando a destino</span>
-      </div>
+      <div class="trip-status"><div class="status-dot"></div><span style="font-size:14px;font-weight:600" id="tripStatusText">Viajando a destino</span></div>
       <div class="trip-progress-bar"><div class="fill" id="tripProgress" style="width:0%"></div></div>
       <div class="trip-eta" id="tripEta">--</div>
       <div class="trip-eta-label">minutos estimados</div>
-      <p style="font-size:13px;color:var(--muted);margin-top:16px" id="tripDestLive">-</p>
+      <p style="font-size:12px;color:var(--muted);margin-top:14px" id="tripDestLive">-</p>
     </div>
   </div>
 
@@ -727,74 +647,60 @@
 <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
 <div class="side-menu" id="sideMenu">
   <div class="menu-header">
-    <div class="m-avatar" id="menuAvatar">V</div>
+    <img src="https://z-cdn-media.chatglm.cn/files/3112a192-f333-49f0-9616-ef349e76055f.png?auth_key=1876523289-ce5f32c3566e42069a6a4fa00b183a47-0-461a2fe1a63a6b2423c79ead9b211dba" alt="Unira">
     <div>
-      <div class="m-name" id="menuName">Viajero</div>
+      <div class="m-name" id="menuName">Socio</div>
       <div class="m-phone" id="menuPhone">+54 11 ....</div>
     </div>
   </div>
   <div class="menu-items">
-    <div class="menu-item" onclick="showToast('Mis viajes — Proximamente','success');toggleMenu()">
-      <i class="fas fa-history"></i><span>Mis viajes</span>
-    </div>
-    <div class="menu-item" onclick="showToast('Metodos de pago — Proximamente','success');toggleMenu()">
-      <i class="fas fa-credit-card"></i><span>Metodos de pago</span>
-    </div>
-    <div class="menu-item" onclick="showToast('Favoritos — Proximamente','success');toggleMenu()">
-      <i class="fas fa-heart"></i><span>Lugares favoritos</span>
-    </div>
-    <div class="menu-item" onclick="showToast('Promociones — Proximamente','success');toggleMenu()">
-      <i class="fas fa-tag"></i><span>Promociones</span>
-    </div>
+    <div class="menu-item" onclick="showToast('Mis viajes — Proximamente','success');toggleMenu()"><i class="fas fa-history"></i><span>Mis viajes</span></div>
+    <div class="menu-item" onclick="showToast('Metodos de pago — Proximamente','success');toggleMenu()"><i class="fas fa-credit-card"></i><span>Metodos de pago</span></div>
+    <div class="menu-item" onclick="showToast('Favoritos — Proximamente','success');toggleMenu()"><i class="fas fa-heart"></i><span>Lugares favoritos</span></div>
+    <div class="menu-item" onclick="showToast('Promociones — Proximamente','success');toggleMenu()"><i class="fas fa-tag"></i><span>Promociones</span></div>
     <div class="menu-divider"></div>
-    <div class="menu-item" onclick="showToast('Configuracion — Proximamente','success');toggleMenu()">
-      <i class="fas fa-cog"></i><span>Configuracion</span>
-    </div>
-    <div class="menu-item" onclick="showToast('Ayuda — Proximamente','success');toggleMenu()">
-      <i class="fas fa-question-circle"></i><span>Centro de ayuda</span>
-    </div>
+    <div class="menu-item" onclick="showToast('Configuracion — Proximamente','success');toggleMenu()"><i class="fas fa-cog"></i><span>Configuracion</span></div>
+    <div class="menu-item" onclick="showToast('Centro de ayuda — Proximamente','success');toggleMenu()"><i class="fas fa-question-circle"></i><span>Centro de ayuda</span></div>
     <div class="menu-divider"></div>
-    <div class="menu-item" onclick="logout()">
-      <i class="fas fa-sign-out-alt" style="color:var(--danger)"></i>
-      <span style="color:var(--danger)">Cerrar sesion</span>
-    </div>
+    <div class="menu-item" onclick="logout()"><i class="fas fa-sign-out-alt" style="color:var(--danger)"></i><span style="color:var(--danger)">Cerrar sesion</span></div>
   </div>
 </div>
 
 <script>
 /* ============================
+   LOGO URL
+   ============================ */
+const LOGO_URL = 'https://z-cdn-media.chatglm.cn/files/3112a192-f333-49f0-9616-ef349e76055f.png?auth_key=1876523289-ce5f32c3566e42069a6a4fa00b183a47-0-461a2fe1a63a6b2423c79ead9b211dba';
+
+/* ============================
    DATOS ARGENTINOS
    ============================ */
-
-// Coordenadas de Buenos Aires y alrededores
 const BA_CENTER = [-34.6037, -58.3816];
 
-// Lugares argentinos para sugerencias
 const places = [
   { name:"Obelisco", address:"Av. 9 de Julio, Microcentro", lat:-34.6037, lng:-58.3816 },
   { name:"Plaza de Mayo", address:"Hipolito Yrigoyen s/n, Microcentro", lat:-34.6081, lng:-58.3724 },
   { name:"Casa Rosada", address:"Balcarce 50, Microcentro", lat:-34.6087, lng:-58.3721 },
   { name:"Teatro Colon", address:"Tucuman 1171, Microcentro", lat:-34.5992, lng:-58.3820 },
   { name:"Av. Corrientes y Florida", address:"Microcentro, CABA", lat:-34.6035, lng:-58.3764 },
-  { name:" Galerias Pacifico", address:"Florida 753, Microcentro", lat:-34.5990, lng:-58.3760 },
+  { name:"Galerias Pacifico", address:"Florida 753, Microcentro", lat:-34.5990, lng:-58.3760 },
   { name:"Puerto Madero", address:"Av. Ingeniero Huergo, Puerto Madero", lat:-34.6147, lng:-58.3632 },
-  { name:"Reserva Ecologica", address:"Tristán Achával Rodríguez 1550, Puerto Madero", lat:-34.6170, lng:-58.3530 },
-  { name:"Restaurante La Biela", address:"Av. Quintana 600, Recoleta", lat:-34.5880, lng:-58.3930 },
-  { name:"Cementerio de Recoleta", address:"Junín 1760, Recoleta", lat:-34.5865, lng:-58.3920 },
-  { name:"Plaza Francia", address:"Av. Libertador y Pueyrredón, Recoleta", lat:-34.5875, lng:-58.3940 },
-  { name:"Centro Cultural Recoleta", address:"Junín 1930, Recoleta", lat:-34.5858, lng:-58.3928 },
+  { name:"Reserva Ecologica", address:"Tristan Achaval Rodriguez, Puerto Madero", lat:-34.6170, lng:-58.3530 },
+  { name:"La Biela", address:"Av. Quintana 600, Recoleta", lat:-34.5880, lng:-58.3930 },
+  { name:"Cementerio de Recoleta", address:"Junin 1760, Recoleta", lat:-34.5865, lng:-58.3920 },
+  { name:"Plaza Francia", address:"Av. Libertador y Pueyrredon, Recoleta", lat:-34.5875, lng:-58.3940 },
   { name:"Palermo Soho", address:"Av. Cordoba y Honduras, Palermo", lat:-34.5860, lng:-58.4120 },
   { name:"Plaza Serrano", address:"Honduras 4000, Palermo", lat:-34.5870, lng:-58.4160 },
   { name:"Jardin Botanico", address:"Av. Santa Fe 3951, Palermo", lat:-34.5835, lng:-58.4070 },
   { name:"Jardin Japones", address:"Av. Casares 3200, Palermo", lat:-34.5815, lng:-58.4100 },
   { name:"Bosques de Palermo", address:"Av. Figueroa Alcorta, Palermo", lat:-34.5775, lng:-58.4130 },
-  { name:"Planetario Galileo", address:"Av. Sarmiento y Belisario Roldán, Palermo", lat:-34.5760, lng:-58.4090 },
+  { name:"Planetario Galileo", address:"Av. Sarmiento, Palermo", lat:-34.5760, lng:-58.4090 },
   { name:"Campo Argentino de Polo", address:"Av. del Libertador 4850, Palermo", lat:-34.5725, lng:-58.4100 },
   { name:"La Rural", address:"Av. Sarmiento 2704, Palermo", lat:-34.5785, lng:-58.4040 },
   { name:"Abasto Shopping", address:"Av. Corrientes 3247, Balvanera", lat:-34.6040, lng:-58.4040 },
-  { name:"Estacion Once", address:"Av. Pueyrredón, Balvanera", lat:-34.6070, lng:-58.4060 },
+  { name:"Estacion Once", address:"Av. Pueyrredon, Balvanera", lat:-34.6070, lng:-58.4060 },
   { name:"Caballito", address:"Av. Rivadavia y Directorio, Caballito", lat:-34.6180, lng:-58.4280 },
-  { name:"Parque Centenario", address:"Av. Directorio y Díaz Vélez, Caballito", lat:-34.6150, lng:-58.4330 },
+  { name:"Parque Centenario", address:"Av. Directorio y Diaz Velez, Caballito", lat:-34.6150, lng:-58.4330 },
   { name:"Flores", address:"Av. Rivadavia 7200, Flores", lat:-34.6280, lng:-58.4620 },
   { name:"Mercado de Flores", address:"Av. Directorio 5800, Flores", lat:-34.6270, lng:-58.4580 },
   { name:"Villa Crespo", address:"Av. Corrientes 5500, Villa Crespo", lat:-34.5970, lng:-58.4270 },
@@ -803,80 +709,103 @@ const places = [
   { name:"Feria de San Telmo", address:"Plaza Dorrego, San Telmo", lat:-34.6210, lng:-58.3700 },
   { name:"La Boca", address:"Caminito, La Boca", lat:-34.6345, lng:-58.3635 },
   { name:"Caminito", address:"Caminito y Magallanes, La Boca", lat:-34.6340, lng:-58.3630 },
-  { name:"Bombonera", address:"Brandsen 805, La Boca", lat:-34.6350, lng:-58.3625 },
-  { name:"Nuñez", address:"Av. Libertador 7500, Nuñez", lat:-34.5580, lng:-58.4550 },
-  { name:"River Plate", address:"Av. Figueroa Alcorta 7597, Nuñez", lat:-34.5550, lng:-58.4530 },
+  { name:"La Bombonera", address:"Brandsen 805, La Boca", lat:-34.6350, lng:-58.3625 },
+  { name:"Nunez", address:"Av. Libertador 7500, Nunez", lat:-34.5580, lng:-58.4550 },
+  { name:"Monumental de River", address:"Av. Figueroa Alcorta 7597, Nunez", lat:-34.5550, lng:-58.4530 },
   { name:"Belgrano", address:"Av. Cabildo y Juramento, Belgrano", lat:-34.5620, lng:-58.4580 },
   { name:"Barrancas de Belgrano", address:"Av. Federico Lacroze, Belgrano", lat:-34.5640, lng:-58.4550 },
-  { name:"Coghlan", address:"Av. Forest y Crámer, Coghlan", lat:-34.5700, lng:-58.4680 },
-  { name:"Saavedra", address:"Av. Cabildo 4500, Saavedra", lat:-34.5750, lng:-58.4750 },
   { name:"Villa Urquiza", address:"Av. Triunvirato 4400, Villa Urquiza", lat:-34.5800, lng:-58.4850 },
-  { name:"Ezeiza - Aeropuerto", address:"Autopista Tte. Gral. Ricchieri, Ezeiza", lat:-34.8222, lng:-58.5358 },
   { name:"Aeroparque Jorge Newbery", address:"Av. Costanera Rafael Obligado, Palermo", lat:-34.5630, lng:-58.4150 },
+  { name:"Aeropuerto Ezeiza", address:"Autopista Tte. Gral. Ricchieri, Ezeiza", lat:-34.8222, lng:-58.5358 },
   { name:"Retiro - Terminal de Omnibus", address:"Av. Antartida Argentina, Retiro", lat:-34.5960, lng:-58.3720 },
-  { name:"Estacion Retiro", address:"Av. Ramos Mejía, Retiro", lat:-34.5940, lng:-58.3730 },
   { name:"Plaza Italia", address:"Av. Santa Fe y Canning, Palermo", lat:-34.5830, lng:-58.4110 },
-  { name:"Paseo La Alcorta", address:"Av. Maipú y Luis María Campos, Belgrano", lat:-34.5670, lng:-58.4380 },
+  { name:"Paseo La Alcorta", address:"Av. Maipu y Luis Maria Campos, Belgrano", lat:-34.5670, lng:-58.4380 },
   { name:"Dot Baires Shopping", address:"Vedia y Congreso, Saavedra", lat:-34.5740, lng:-58.4770 },
+  { name:"Parque Lezama", address:"Av. Martin Garcia y Defensa, San Telmo", lat:-34.6230, lng:-58.3680 },
+  { name:"Tecnopolis", address:"Av. General Paz y Constituyentes, Villa Gesell", lat:-34.5690, lng:-58.5010 },
+  { name:"Estadio Monumental", address:"Av. Pres. Figueroa Alcorta 7597, Nunez", lat:-34.5548, lng:-58.4527 },
 ];
 
-// Conductores ficticios argentinos
 const drivers = [
-  { name:"Marcos Ramirez", car:"Fiat Cronos - Negro - ABC 123", rating:"4.9", trips:"1.247", img:"driver1" },
-  { name:"Luciana Torres", car:"Toyota Etios - Blanco - DEF 456", rating:"4.8", trips:"856", img:"driver2" },
-  { name:"Santiago Gomez", car:"Volkswagen Gol - Gris - GHI 789", rating:"4.7", trips:"2.103", img:"driver3" },
-  { name:"Valentina Ruiz", car:"Renault Kwid - Rojo - JKL 012", rating:"4.9", trips:"543", img:"driver4" },
-  { name:"Facundo Martinez", car:"Chevrolet Onix - Azul - MNO 345", rating:"4.6", trips:"1.891", img:"driver5" },
+  { name:"Marcos Ramirez", car:"Fiat Cronos - Negro - ABC 123", rating:"4.9", trips:"1.247", img:"unira-d1" },
+  { name:"Luciana Torres", car:"Toyota Etios - Blanco - DEF 456", rating:"4.8", trips:"856", img:"unira-d2" },
+  { name:"Santiago Gomez", car:"Volkswagen Gol - Gris - GHI 789", rating:"4.7", trips:"2.103", img:"unira-d3" },
+  { name:"Valentina Ruiz", car:"Renault Kwid - Rojo - JKL 012", rating:"4.9", trips:"543", img:"unira-d4" },
+  { name:"Facundo Martinez", car:"Chevrolet Onix - Azul - MNO 345", rating:"4.6", trips:"1.891", img:"unira-d5" },
 ];
 
-// Tipos de vehículo con precios argentinos
 const vehicleTypes = [
-  { id:"moto", name:"VoyMoto", desc:"Rapida y economica", icon:"fa-motorcycle", base:2500, km:180, wait:150 },
-  { id:"auto", name:"VoyAuto", desc:"El clasico, confortable", icon:"fa-car", base:3800, km:280, wait:200 },
-  { id:"premium", name:"VoyPremium", desc:"Auto nuevo, maximo confort", icon:"fa-car-side", base:6500, km:480, wait:350 },
-  { id:"van", name:"VoyFlete", desc:"Hasta 6 pasajeros", icon:"fa-van-shuttle", base:8500, km:620, wait:400 },
+  { id:"moto", name:"UniraMoto", desc:"Rapida y economica", icon:"fa-motorcycle", base:2500, km:180, wait:150 },
+  { id:"auto", name:"UniraAuto", desc:"Confortable y seguro", icon:"fa-car", base:3800, km:280, wait:200 },
+  { id:"premium", name:"UniraPremium", desc:"Auto nuevo, maximo confort", icon:"fa-car-side", base:6500, km:480, wait:350 },
+  { id:"van", name:"UniraFlete", desc:"Hasta 6 pasajeros", icon:"fa-van-shuttle", base:8500, km:620, wait:400 },
 ];
 
-// Metodos de pago argentinos
 const paymentMethods = [
   { label:"Efectivo", detail:"Pago en efectivo al conductor", icon:"fa-money-bill-wave" },
   { label:"Mercado Pago", detail:"**** 4521", icon:"fa-wallet" },
-  { label:"Transferencia bancaria", detail:"Banco Nación - CVU", icon:"fa-building-columns" },
+  { label:"Transferencia bancaria", detail:"Banco Nacion - CVU", icon:"fa-building-columns" },
   { label:"Tarjeta de debito", detail:"Visa **** 7832", icon:"fa-credit-card" },
 ];
 
 /* ============================
-   ESTADO DE LA APP
+   ESTADO
    ============================ */
 let state = {
-  phone: '',
-  screen: 'splash',
-  origin: null,
-  dest: null,
-  selectedVehicle: 'auto',
-  selectedPayment: 0,
-  rating: 0,
-  tip: 0,
-  searchTimeout: null,
-  tripInterval: null,
-  map: null,
-  routeLine: null,
-  driverMarker: null,
-  userMarker: null,
+  phone:'', origin:null, dest:null,
+  selectedVehicle:'auto', selectedPayment:0,
+  rating:0, tip:0,
+  searchTimeout:null, tripInterval:null,
+  map:null, routeLine:null, driverMarker:null, userMarker:null,
+  processRunning: false,
 };
 
 /* ============================
-   NAVEGACIÓN DE PANTALLAS
+   PULSADOR DE INTERRUPCIÓN
+   ============================ */
+function setProcessRunning(running) {
+  state.processRunning = running;
+  document.getElementById('stopBtn').classList.toggle('visible', running);
+}
+
+function emergencyStop() {
+  // Cortar TODOS los procesos en curso
+  clearTimeout(state.searchTimeout);
+  clearInterval(state.tripInterval);
+  state.searchTimeout = null;
+  state.tripInterval = null;
+  setProcessRunning(false);
+
+  // Limpiar marcadores de ruta
+  if (state.routeLine) { state.map.removeLayer(state.routeLine); state.routeLine = null; }
+  if (state.driverMarker) { state.map.removeLayer(state.driverMarker); state.driverMarker = null; }
+
+  // Volver al panel de request
+  hideAllSheets();
+  document.getElementById('sheetRequest').style.display = 'block';
+
+  // Resetear viaje parcial
+  state.origin = null;
+  state.dest = null;
+  document.getElementById('inputOrigin').value = '';
+  document.getElementById('inputDest').value = '';
+  document.getElementById('vehicleSection').style.display = 'none';
+  document.getElementById('suggestionsContainer').innerHTML = '';
+
+  centerMap();
+  showToast('Proceso interrumpido', 'error');
+}
+
+/* ============================
+   NAVEGACIÓN
    ============================ */
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  state.screen = id;
 }
-
 function goToSplash() {
   showScreen('splash');
-  setTimeout(() => showScreen('login'), 1200);
+  setTimeout(() => showScreen('login'), 800);
 }
 
 /* ============================
@@ -889,13 +818,8 @@ setTimeout(() => showScreen('login'), 2500);
    ============================ */
 function formatPhone(input) {
   let val = input.value.replace(/\D/g,'');
-  // Formato: 11 1234-5678
-  if (val.length > 2) {
-    val = val.substring(0,2) + ' ' + val.substring(2);
-  }
-  if (val.length > 7) {
-    val = val.substring(0,7) + '-' + val.substring(7,11);
-  }
+  if (val.length > 2) val = val.substring(0,2) + ' ' + val.substring(2);
+  if (val.length > 7) val = val.substring(0,7) + '-' + val.substring(7,11);
   input.value = val;
   document.getElementById('btnSendCode').disabled = input.value.replace(/\D/g,'').length < 10;
 }
@@ -906,7 +830,6 @@ function sendCode() {
   state.phone = '+54 ' + document.getElementById('phoneInput').value;
   document.getElementById('verifyPhone').textContent = state.phone;
   showScreen('verify');
-  // Enfocar primer input de código
   setTimeout(() => document.querySelector('#codeInputs input').focus(), 300);
 }
 
@@ -915,37 +838,27 @@ function sendCode() {
    ============================ */
 function codeNext(input, idx) {
   input.value = input.value.replace(/\D/g,'');
-  if (input.value && idx < 3) {
-    document.querySelectorAll('#codeInputs input')[idx+1].focus();
-  }
+  if (input.value && idx < 3) document.querySelectorAll('#codeInputs input')[idx+1].focus();
   checkCodeComplete();
 }
-
 function codeBack(e, input, idx) {
-  if (e.key === 'Backspace' && !input.value && idx > 0) {
-    document.querySelectorAll('#codeInputs input')[idx-1].focus();
-  }
+  if (e.key === 'Backspace' && !input.value && idx > 0) document.querySelectorAll('#codeInputs input')[idx-1].focus();
 }
-
 function checkCodeComplete() {
-  const inputs = document.querySelectorAll('#codeInputs input');
   let code = '';
-  inputs.forEach(i => code += i.value);
+  document.querySelectorAll('#codeInputs input').forEach(i => code += i.value);
   document.getElementById('btnVerify').disabled = code.length < 4;
 }
-
 function verifyCode() {
-  const inputs = document.querySelectorAll('#codeInputs input');
   let code = '';
-  inputs.forEach(i => code += i.value);
-
+  document.querySelectorAll('#codeInputs input').forEach(i => code += i.value);
   if (code === '1234') {
-    showToast('Telefono verificado correctamente', 'success');
+    showToast('Telefono verificado', 'success');
     initApp();
   } else {
     showToast('Codigo incorrecto. Usá 1234', 'error');
-    inputs.forEach(i => { i.value = ''; });
-    inputs[0].focus();
+    document.querySelectorAll('#codeInputs input').forEach(i => i.value = '');
+    document.querySelectorAll('#codeInputs input')[0].focus();
     document.getElementById('btnVerify').disabled = true;
   }
 }
@@ -954,19 +867,13 @@ function verifyCode() {
    INICIALIZAR APP
    ============================ */
 function initApp() {
-  // Actualizar nombre de usuario
-  const initial = state.phone.slice(-1);
-  document.getElementById('userAvatar').textContent = initial;
-  document.getElementById('menuAvatar').textContent = initial;
-  document.getElementById('menuPhone').textContent = state.phone;
-
-  // Saludo según hora
   const h = new Date().getHours();
-  let greeting = 'Hola';
-  if (h < 12) greeting = 'Buenos dias';
-  else if (h < 19) greeting = 'Buenas tardes';
-  else greeting = 'Buenas noches';
-  document.getElementById('greetingName').textContent = greeting;
+  let g = 'Hola';
+  if (h < 12) g = 'Buenos dias';
+  else if (h < 19) g = 'Buenas tardes';
+  else g = 'Buenas noches';
+  document.getElementById('greetingName').textContent = g;
+  document.getElementById('menuPhone').textContent = state.phone;
 
   showScreen('mapScreen');
   initMap();
@@ -977,172 +884,93 @@ function initApp() {
    ============================ */
 function initMap() {
   if (state.map) return;
+  state.map = L.map('map', { center: BA_CENTER, zoom: 14, zoomControl: false, attributionControl: false });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(state.map);
 
-  state.map = L.map('map', {
-    center: BA_CENTER,
-    zoom: 14,
-    zoomControl: false,
-    attributionControl: false,
-  });
-
-  // Tiles de OpenStreetMap (funciona sin API key)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-  }).addTo(state.map);
-
-  // Marcador de posición del usuario
   const userIcon = L.divIcon({
-    html: `<div style="width:18px;height:18px;background:#00E676;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.4);"></div>`,
-    iconSize: [18,18],
-    iconAnchor: [9,9],
-    className: ''
+    html: '<div style="width:16px;height:16px;background:var(--accent);border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.4);"></div>',
+    iconSize:[16,16], iconAnchor:[8,8], className:''
   });
+  const uLat = BA_CENTER[0] + (Math.random()-0.5)*0.02;
+  const uLng = BA_CENTER[1] + (Math.random()-0.5)*0.02;
+  state.userMarker = L.marker([uLat, uLng], { icon: userIcon }).addTo(state.map);
+  state.map.setView([uLat, uLng], 15);
 
-  state.userMarker = L.marker(BA_CENTER, { icon: userIcon }).addTo(state.map);
-
-  // Simular ubicación ligeramente aleatoria dentro de Buenos Aires
-  const userLat = BA_CENTER[0] + (Math.random()-0.5)*0.02;
-  const userLng = BA_CENTER[1] + (Math.random()-0.5)*0.02;
-  state.userMarker.setLatLng([userLat, userLng]);
-  state.map.setView([userLat, userLng], 15);
-
-  // Agregar algunos autos "fantasmas" circulando
-  addFakeCars();
-}
-
-function addFakeCars() {
-  const bounds = state.map.getBounds();
+  // Autos fantasma
   const carIcon = L.divIcon({
-    html: `<div style="font-size:16px;color:#00E676;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));"><i class="fas fa-car"></i></div>`,
-    iconSize: [20,20],
-    iconAnchor: [10,10],
-    className: ''
+    html: '<div style="font-size:14px;color:#0EA5A0;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));"><i class="fas fa-car"></i></div>',
+    iconSize:[18,18], iconAnchor:[9,9], className:''
   });
-
+  const bounds = state.map.getBounds();
   for (let i = 0; i < 6; i++) {
-    const lat = bounds.getSouth() + Math.random() * (bounds.getNorth() - bounds.getSouth());
-    const lng = bounds.getWest() + Math.random() * (bounds.getEast() - bounds.getWest());
+    const lat = bounds.getSouth() + Math.random()*(bounds.getNorth()-bounds.getSouth());
+    const lng = bounds.getWest() + Math.random()*(bounds.getEast()-bounds.getWest());
     const m = L.marker([lat, lng], { icon: carIcon }).addTo(state.map);
-    // Mover autos cada pocos segundos
     setInterval(() => {
-      const newLat = m.getLatLng().lat + (Math.random()-0.5)*0.003;
-      const newLng = m.getLatLng().lng + (Math.random()-0.5)*0.003;
-      m.setLatLng([newLat, newLng]);
+      m.setLatLng([m.getLatLng().lat+(Math.random()-0.5)*0.003, m.getLatLng().lng+(Math.random()-0.5)*0.003]);
     }, 3000 + Math.random()*2000);
   }
 }
 
 function centerMap() {
-  if (state.userMarker) {
-    state.map.setView(state.userMarker.getLatLng(), 15);
-  }
+  if (state.userMarker) state.map.setView(state.userMarker.getLatLng(), 15);
 }
 
 /* ============================
-   SUGERENCIAS DE DIRECCIONES
+   SUGERENCIAS
    ============================ */
 let activeField = null;
-
-function showSuggestions(field) {
-  activeField = field;
-  const input = field === 'origin' ? document.getElementById('inputOrigin') : document.getElementById('inputDest');
-  filterSuggestions(field);
-}
+function showSuggestions(field) { activeField = field; filterSuggestions(field); }
 
 function filterSuggestions(field) {
   activeField = field;
-  const input = field === 'origin' ? document.getElementById('inputOrigin') : document.getElementById('inputDest');
-  const query = input.value.toLowerCase().trim();
-  const container = document.getElementById('suggestionsContainer');
-
-  let filtered = places;
-  if (query.length > 0) {
-    filtered = places.filter(p =>
-      p.name.toLowerCase().includes(query) ||
-      p.address.toLowerCase().includes(query)
-    );
-  }
-
-  if (filtered.length === 0) {
-    container.innerHTML = '';
-    return;
-  }
-
-  container.innerHTML = `<div class="suggestions">${
-    filtered.slice(0,8).map(p => `
-      <div class="suggestion-item" onclick="selectPlace(${p.lat},${p.lng},'${p.name.replace(/'/g,"\\'")}','${p.address.replace(/'/g,"\\'")}','${field}')">
-        <i class="fas fa-map-marker-alt"></i>
-        <div>
-          <div class="sug-text">${p.name}</div>
-          <div class="sug-sub">${p.address}</div>
-        </div>
-      </div>
-    `).join('')
-  }</div>`;
+  const input = document.getElementById(field === 'origin' ? 'inputOrigin' : 'inputDest');
+  const q = input.value.toLowerCase().trim();
+  const c = document.getElementById('suggestionsContainer');
+  let f = places;
+  if (q.length > 0) f = places.filter(p => p.name.toLowerCase().includes(q) || p.address.toLowerCase().includes(q));
+  if (!f.length) { c.innerHTML = ''; return; }
+  c.innerHTML = '<div class="suggestions">' + f.slice(0,8).map(p =>
+    `<div class="suggestion-item" onclick="selectPlace(${p.lat},${p.lng},'${p.name.replace(/'/g,"\\'")}','${p.address.replace(/'/g,"\\'")}','${field}')">
+      <i class="fas fa-map-marker-alt"></i><div><div class="sug-text">${p.name}</div><div class="sug-sub">${p.address}</div></div>
+    </div>`
+  ).join('') + '</div>';
 }
 
 function selectPlace(lat, lng, name, address, field) {
-  const input = field === 'origin' ? document.getElementById('inputOrigin') : document.getElementById('inputDest');
+  const input = document.getElementById(field === 'origin' ? 'inputOrigin' : 'inputDest');
   input.value = name;
   document.getElementById('suggestionsContainer').innerHTML = '';
-
   const place = { lat, lng, name, address };
-  if (field === 'origin') {
-    state.origin = place;
-    if (state.userMarker) state.userMarker.setLatLng([lat, lng]);
-  } else {
-    state.dest = place;
-  }
-
-  // Si tenemos origen y destino, mostrar vehículos
-  if (state.origin && state.dest) {
-    showVehicleOptions();
-    drawRoute();
-  }
+  if (field === 'origin') { state.origin = place; if (state.userMarker) state.userMarker.setLatLng([lat, lng]); }
+  else { state.dest = place; }
+  if (state.origin && state.dest) { showVehicleOptions(); drawRoute(); }
 }
 
 /* ============================
-   OPCIONES DE VEHICULO
+   VEHÍCULOS
    ============================ */
 function showVehicleOptions() {
   const dist = getDistance(state.origin.lat, state.origin.lng, state.dest.lat, state.dest.lng);
-  const time = Math.round(dist / 25 * 60); // ~25km/h promedio CABA
-  const section = document.getElementById('vehicleSection');
+  const time = Math.round(dist / 25 * 60);
   const list = document.getElementById('vehicleList');
-
   list.innerHTML = vehicleTypes.map(v => {
     const price = Math.round(v.base + dist * v.km + time * v.wait / 60);
     const eta = Math.max(3, Math.round(Math.random()*8 + 3));
-    return `
-      <div class="vehicle-card ${v.id === state.selectedVehicle ? 'selected' : ''}"
-           onclick="selectVehicle('${v.id}')">
-        <div class="v-icon"><i class="fas ${v.icon}"></i></div>
-        <div class="v-info">
-          <div class="v-name">${v.name}</div>
-          <div class="v-desc">${v.desc}</div>
-        </div>
-        <div class="v-price">
-          <div class="v-amount">$${formatARS(price)}</div>
-          <div class="v-time">${eta} min</div>
-        </div>
-      </div>
-    `;
+    return `<div class="vehicle-card ${v.id===state.selectedVehicle?'selected':''}" onclick="selectVehicle('${v.id}')">
+      <div class="v-icon"><i class="fas ${v.icon}"></i></div>
+      <div class="v-info"><div class="v-name">${v.name}</div><div class="v-desc">${v.desc}</div></div>
+      <div class="v-price"><div class="v-amount">$${formatARS(price)}</div><div class="v-time">${eta} min</div></div>
+    </div>`;
   }).join('');
-
-  section.style.display = 'block';
+  document.getElementById('vehicleSection').style.display = 'block';
 }
 
-function selectVehicle(id) {
-  state.selectedVehicle = id;
-  showVehicleOptions();
-}
+function selectVehicle(id) { state.selectedVehicle = id; showVehicleOptions(); }
 
-function formatARS(n) {
-  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-}
+function formatARS(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
 
 function getDistance(lat1, lng1, lat2, lng2) {
-  // Distancia en km (fórmula de Haversine simplificada)
   const R = 6371;
   const dLat = (lat2-lat1)*Math.PI/180;
   const dLng = (lng2-lng1)*Math.PI/180;
@@ -1151,77 +979,51 @@ function getDistance(lat1, lng1, lat2, lng2) {
 }
 
 /* ============================
-   DIBUJAR RUTA EN MAPA
+   RUTA EN MAPA
    ============================ */
 function drawRoute() {
   if (state.routeLine) state.map.removeLayer(state.routeLine);
-
-  const points = generateRoutePoints(
-    state.origin.lat, state.origin.lng,
-    state.dest.lat, state.dest.lng
-  );
-
-  state.routeLine = L.polyline(points, {
-    color: '#00E676',
-    weight: 5,
-    opacity: 0.8,
-    dashArray: null,
-  }).addTo(state.map);
-
-  // Ajustar vista para mostrar toda la ruta
-  state.map.fitBounds(state.routeLine.getBounds(), { padding: [60, 60] });
-}
-
-function generateRoutePoints(lat1, lng1, lat2, lng2) {
-  // Generar puntos intermedios simulando una ruta con curvas
-  const points = [];
-  const steps = 30;
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    const lat = lat1 + (lat2 - lat1) * t;
-    const lng = lng1 + (lng2 - lng1) * t;
-    // Añadir variación para que no sea una línea recta
-    const offset = Math.sin(t * Math.PI * 3) * 0.003 * (1 - Math.abs(t - 0.5) * 2);
-    const perpLat = offset;
-    const perpLng = offset * 0.8;
-    points.push([lat + perpLat, lng + perpLng]);
+  const pts = [];
+  for (let i = 0; i <= 30; i++) {
+    const t = i / 30;
+    const lat = state.origin.lat + (state.dest.lat - state.origin.lat) * t;
+    const lng = state.origin.lng + (state.dest.lng - state.origin.lng) * t;
+    const off = Math.sin(t * Math.PI * 3) * 0.003 * (1 - Math.abs(t-0.5)*2);
+    pts.push([lat + off, lng + off * 0.8]);
   }
-  return points;
+  state.routeLine = L.polyline(pts, { color:'#0EA5A0', weight:5, opacity:0.8 }).addTo(state.map);
+  state.map.fitBounds(state.routeLine.getBounds(), { padding:[60,60] });
 }
 
 /* ============================
-   METODO DE PAGO
+   PAGO
    ============================ */
 function togglePayment() {
   state.selectedPayment = (state.selectedPayment + 1) % paymentMethods.length;
   const pm = paymentMethods[state.selectedPayment];
   document.getElementById('payLabel').textContent = pm.label;
   document.getElementById('payDetail').textContent = pm.detail;
-  showToast(`Pago: ${pm.label}`, 'success');
+  showToast('Pago: ' + pm.label, 'success');
 }
 
 /* ============================
    PEDIR VIAJE
    ============================ */
 function requestTrip() {
-  if (!state.origin || !state.dest) {
-    showToast('Completá origen y destino', 'error');
-    return;
-  }
-
-  // Ocultar panel de solicitud, mostrar búsqueda
+  if (!state.origin || !state.dest) { showToast('Completá origen y destino', 'error'); return; }
   hideAllSheets();
   document.getElementById('sheetSearching').style.display = 'block';
+  setProcessRunning(true);
 
-  // Simular búsqueda de conductor (4-8 segundos)
-  const searchTime = 4000 + Math.random() * 4000;
   state.searchTimeout = setTimeout(() => {
     driverFound();
-  }, searchTime);
+  }, 4000 + Math.random() * 4000);
 }
 
 function cancelSearch() {
   clearTimeout(state.searchTimeout);
+  state.searchTimeout = null;
+  setProcessRunning(false);
   hideAllSheets();
   document.getElementById('sheetRequest').style.display = 'block';
   showToast('Busqueda cancelada', 'error');
@@ -1231,12 +1033,11 @@ function cancelSearch() {
    CONDUCTOR ENCONTRADO
    ============================ */
 function driverFound() {
-  const driver = drivers[Math.floor(Math.random() * drivers.length)];
-  document.getElementById('driverAvatar').src = `https://picsum.photos/seed/${driver.img}/112/112.jpg`;
-  document.getElementById('driverName').textContent = driver.name;
-  document.getElementById('driverCar').textContent = driver.car;
-  document.getElementById('driverRating').textContent = driver.rating;
-
+  const d = drivers[Math.floor(Math.random() * drivers.length)];
+  document.getElementById('driverAvatar').src = `https://picsum.photos/seed/${d.img}/104/104.jpg`;
+  document.getElementById('driverName').textContent = d.name;
+  document.getElementById('driverCar').textContent = d.car;
+  document.getElementById('driverRating').textContent = d.rating;
   document.getElementById('tripOriginText').textContent = state.origin.name;
   document.getElementById('tripDestText').textContent = state.dest.name;
 
@@ -1245,28 +1046,28 @@ function driverFound() {
   const v = vehicleTypes.find(vt => vt.id === state.selectedVehicle);
   const price = Math.round(v.base + dist * v.km + time * v.wait / 60);
 
-  document.getElementById('tripDist').textContent = dist < 1 ? `${Math.round(dist*1000)} m` : `${dist.toFixed(1)} km`;
-  document.getElementById('tripTime').textContent = `${time} min`;
-  document.getElementById('tripPrice').textContent = `$${formatARS(price)}`;
+  document.getElementById('tripDist').textContent = dist < 1 ? Math.round(dist*1000)+' m' : dist.toFixed(1)+' km';
+  document.getElementById('tripTime').textContent = time + ' min';
+  document.getElementById('tripPrice').textContent = '$' + formatARS(price);
 
   hideAllSheets();
   document.getElementById('sheetDriver').style.display = 'block';
 
-  // Agregar marcador del conductor en el mapa
+  // Marcador conductor
   if (state.driverMarker) state.map.removeLayer(state.driverMarker);
   const dIcon = L.divIcon({
-    html: `<div style="font-size:20px;color:#00E676;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));"><i class="fas fa-car"></i></div>`,
-    iconSize: [24,24], iconAnchor: [12,12], className:''
+    html: '<div style="font-size:18px;color:#0EA5A0;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));"><i class="fas fa-car"></i></div>',
+    iconSize:[22,22], iconAnchor:[11,11], className:''
   });
-  // Posicionar conductor cerca del origen
-  const dLat = state.origin.lat + (Math.random()-0.5)*0.005;
-  const dLng = state.origin.lng + (Math.random()-0.5)*0.005;
-  state.driverMarker = L.marker([dLat, dLng], { icon: dIcon }).addTo(state.map);
+  state.driverMarker = L.marker([
+    state.origin.lat + (Math.random()-0.5)*0.005,
+    state.origin.lng + (Math.random()-0.5)*0.005
+  ], { icon: dIcon }).addTo(state.map);
 
-  showToast('Conductor en camino', 'success');
+  showToast('Socio de Unira en camino', 'success');
 
-  // Auto-arrancar viaje tras 5 segundos
-  setTimeout(() => startTrip(), 5000);
+  // Arrancar viaje en 5s
+  state.searchTimeout = setTimeout(() => startTrip(), 5000);
 }
 
 /* ============================
@@ -1281,32 +1082,29 @@ function startTrip() {
   document.getElementById('tripDestLive').textContent = 'Destino: ' + state.dest.name;
 
   let elapsed = 0;
-  const interval = 500; // medio segundo
-  const totalSteps = totalTime * 2; // cantidad de steps
+  const totalSteps = totalTime * 2;
 
   state.tripInterval = setInterval(() => {
     elapsed++;
     const progress = Math.min((elapsed / totalSteps) * 100, 100);
     document.getElementById('tripProgress').style.width = progress + '%';
-
-    const remaining = Math.max(0, Math.round(totalTime - elapsed/2));
+    const remaining = Math.max(0, Math.round(totalTime - elapsed / 2));
     document.getElementById('tripEta').textContent = remaining;
+    document.getElementById('tripStatusText').textContent = progress > 90 ? 'Llegando a destino' : 'Viajando a destino';
 
     if (state.driverMarker && state.routeLine) {
-      // Mover marcador del conductor a lo largo de la ruta
-      const routePoints = state.routeLine.getLatLngs();
-      const idx = Math.min(Math.floor(progress / 100 * (routePoints.length - 1)), routePoints.length - 1);
-      state.driverMarker.setLatLng(routePoints[idx]);
+      const pts = state.routeLine.getLatLngs();
+      const idx = Math.min(Math.floor(progress / 100 * (pts.length - 1)), pts.length - 1);
+      state.driverMarker.setLatLng(pts[idx]);
     }
-
-    document.getElementById('tripStatusText').textContent =
-      progress > 90 ? 'Llegando a destino' : 'Viajando a destino';
 
     if (progress >= 100) {
       clearInterval(state.tripInterval);
+      state.tripInterval = null;
+      setProcessRunning(false);
       setTimeout(() => endTrip(), 1500);
     }
-  }, interval);
+  }, 500);
 }
 
 /* ============================
@@ -1315,58 +1113,37 @@ function startTrip() {
 function endTrip() {
   hideAllSheets();
   document.getElementById('sheetRating').style.display = 'block';
-  document.getElementById('ratingDriverName').textContent =
-    document.getElementById('driverName').textContent;
+  document.getElementById('ratingDriverName').textContent = document.getElementById('driverName').textContent;
 
-  // Limpiar mapa
   if (state.routeLine) { state.map.removeLayer(state.routeLine); state.routeLine = null; }
   if (state.driverMarker) { state.map.removeLayer(state.driverMarker); state.driverMarker = null; }
 
-  state.rating = 0;
-  state.tip = 0;
+  state.rating = 0; state.tip = 0;
   updateStars();
   document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('selected'));
-
   showToast('Llegaste a tu destino', 'success');
 }
 
 /* ============================
    CALIFICACIÓN
    ============================ */
-function setRating(n) {
-  state.rating = n;
-  updateStars();
-}
-
+function setRating(n) { state.rating = n; updateStars(); }
 function updateStars() {
-  const btns = document.querySelectorAll('#ratingStars button');
-  btns.forEach((b, i) => {
-    b.classList.toggle('active', i < state.rating);
-  });
+  document.querySelectorAll('#ratingStars button').forEach((b, i) => b.classList.toggle('active', i < state.rating));
 }
-
 function selectTip(btn, amount) {
   state.tip = amount;
   document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
 }
-
 function submitRating() {
-  if (state.rating === 0) {
-    showToast('Dale una puntuacion al conductor', 'error');
-    return;
-  }
-
-  const tipText = state.tip > 0 ? ` + propina $${formatARS(state.tip)}` : '';
-  showToast(`Calificacion: ${state.rating} estrellas${tipText}`, 'success');
-
-  // Resetear estado y volver a pantalla principal
-  state.origin = null;
-  state.dest = null;
+  if (!state.rating) { showToast('Dale una puntuacion', 'error'); return; }
+  const tipTxt = state.tip > 0 ? ' + propina $' + formatARS(state.tip) : '';
+  showToast('Calificacion: ' + state.rating + ' estrellas' + tipTxt, 'success');
+  state.origin = null; state.dest = null;
   document.getElementById('inputOrigin').value = '';
   document.getElementById('inputDest').value = '';
   document.getElementById('vehicleSection').style.display = 'none';
-
   hideAllSheets();
   document.getElementById('sheetRequest').style.display = 'block';
   centerMap();
@@ -1375,16 +1152,11 @@ function submitRating() {
 /* ============================
    ACCIONES SIMULADAS
    ============================ */
-function simulateCall() {
-  showToast('Llamando al conductor...', 'success');
-}
-
-function simulateChat() {
-  showToast('Chat con el conductor — Proximamente', 'success');
-}
+function simulateCall() { showToast('Llamando al socio...', 'success'); }
+function simulateChat() { showToast('Chat — Proximamente', 'success'); }
 
 /* ============================
-   MENÚ LATERAL
+   MENÚ
    ============================ */
 function toggleMenu() {
   document.getElementById('menuOverlay').classList.toggle('show');
@@ -1393,21 +1165,22 @@ function toggleMenu() {
 
 function logout() {
   toggleMenu();
+  // Cortar procesos
+  clearTimeout(state.searchTimeout);
+  clearInterval(state.tripInterval);
+  state.searchTimeout = null; state.tripInterval = null;
+  setProcessRunning(false);
+
   state.phone = '';
   document.getElementById('phoneInput').value = '';
   document.getElementById('btnSendCode').disabled = true;
   document.querySelectorAll('#codeInputs input').forEach(i => i.value = '');
   document.getElementById('btnVerify').disabled = true;
 
-  // Limpiar mapa
   if (state.map) {
     state.map.remove();
-    state.map = null;
-    state.routeLine = null;
-    state.driverMarker = null;
-    state.userMarker = null;
+    state.map = null; state.routeLine = null; state.driverMarker = null; state.userMarker = null;
   }
-
   hideAllSheets();
   document.getElementById('sheetRequest').style.display = 'block';
   showScreen('login');
@@ -1422,16 +1195,15 @@ function hideAllSheets() {
   });
 }
 
-function showToast(msg, type='') {
+function showToast(msg, type) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show ' + type;
-  clearTimeout(t._timeout);
-  t._timeout = setTimeout(() => { t.className = 'toast'; }, 2800);
+  t.textContent = msg; t.className = 'toast show ' + type;
+  clearTimeout(t._to);
+  t._to = setTimeout(() => { t.className = 'toast'; }, 2800);
 }
 
 // Cerrar sugerencias al tocar fuera
-document.addEventListener('click', (e) => {
+document.addEventListener('click', e => {
   if (!e.target.closest('.route-field') && !e.target.closest('.suggestions')) {
     document.getElementById('suggestionsContainer').innerHTML = '';
   }
