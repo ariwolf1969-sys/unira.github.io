@@ -2,102 +2,1408 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cooperativa Unira</title>
-
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0A0A0A">
+<title>Voya — Tu viaje, tu manera</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+<script>
+tailwind.config={theme:{extend:{colors:{bg:'#0A0A0A',card:'#141414',surface:'#1C1C1C',elevated:'#262626',bdr:'#2A2A2A',accent:'#FF6B35','accent-h':'#FF8555',success:'#34D399',warn:'#FBBF24',danger:'#EF4444',txt:'#F0F0F0','txt-s':'#8A8A8A'},fontFamily:{sans:['"Plus Jakarta Sans"','sans-serif']}}}}
+</script>
 <style>
-body {
-  margin:0;
-  font-family: Arial;
-  background: linear-gradient(135deg,#0a0f2c,#1b2f6b,#0d1a40);
-  color:white;
-  text-align:center;
-}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#0A0A0A;color:#F0F0F0;overflow:hidden;height:100dvh;width:100vw;touch-action:manipulation}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#333;border-radius:4px}
 
-/* NAV */
-nav {
-  padding:15px;
-  background:#000;
-}
+/* Pantallas */
+.screen{position:fixed;inset:0;z-index:10;transition:opacity .35s,transform .35s;will-change:transform,opacity}
+.screen.hidden{opacity:0;pointer-events:none;transform:translateY(20px)}
+.screen.slide-up{transform:translateY(100%);opacity:1}
+.screen.slide-up.active{transform:translateY(0)}
+.screen.slide-right{transform:translateX(-100%);opacity:1}
+.screen.slide-right.active{transform:translateX(0)}
+.screen.fade-in{opacity:0;pointer-events:none}
+.screen.fade-in.active{opacity:1;pointer-events:auto}
 
-nav a {
-  margin:10px;
-  color:white;
-  text-decoration:none;
-  font-weight:bold;
-}
+/* Mapa */
+#map-container{position:fixed;inset:0;z-index:0}
+#map{width:100%;height:100%}
+.leaflet-control-attribution{display:none!important}
+.leaflet-control-zoom{display:none!important}
 
-/* HERO */
-.hero {
-  padding:80px 20px;
-}
+/* Marcadores personalizados */
+.driver-marker{background:transparent!important;border:none!important}
+.driver-marker-inner{width:34px;height:34px;background:#1C1C1C;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #FF6B35;box-shadow:0 2px 10px rgba(255,107,53,.4);position:relative;z-index:2}
+.driver-marker-pulse{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:rgba(255,107,53,.15);animation:mpulse 2s ease-out infinite;z-index:1}
+.user-dot{width:16px;height:16px;background:#34D399;border-radius:50%;border:3px solid #0A0A0A;box-shadow:0 0 0 2px #34D399,0 2px 8px rgba(52,211,153,.4)}
+.user-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;background:rgba(52,211,153,.1);animation:mpulse 2.5s ease-out infinite}
+.dest-dot{width:16px;height:16px;background:#FF6B35;border-radius:50%;border:3px solid #0A0A0A;box-shadow:0 0 0 2px #FF6B35,0 2px 8px rgba(255,107,53,.4)}
+.pickup-dot{width:14px;height:14px;background:#34D399;border-radius:50%;border:3px solid #0A0A0A;box-shadow:0 0 0 2px #34D399}
 
-.pulse {
-  color:red;
-  animation:pulse 1.5s infinite;
-}
+@keyframes mpulse{0%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(-50%,-50%) scale(2.5);opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes matchRing{0%{transform:scale(.3);opacity:1}100%{transform:scale(1.8);opacity:0}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 
-@keyframes pulse {
-  0%{opacity:1;}
-  50%{opacity:0.5;}
-  100%{opacity:1;}
-}
+.anim-fade-up{animation:fadeUp .5s ease both}
+.anim-fade-in{animation:fadeIn .4s ease both}
+.anim-scale-in{animation:scaleIn .4s ease both}
+.anim-slide-up{animation:slideUp .4s cubic-bezier(.32,.72,0,1) both}
 
-/* BOTON */
-.btn {
-  display:inline-block;
-  margin:15px;
-  padding:15px 30px;
-  background:#00ffae;
-  color:black;
-  border-radius:10px;
-  text-decoration:none;
-  font-weight:bold;
-}
+/* Botones */
+.btn-press{transition:transform .15s,box-shadow .15s}
+.btn-press:active{transform:scale(.96)}
 
-/* WHATSAPP */
-.whatsapp {
-  position:fixed;
-  bottom:20px;
-  right:20px;
-  background:#25D366;
-  color:white;
-  padding:15px;
-  border-radius:50%;
-  font-size:20px;
-  text-decoration:none;
-}
+/* Bottom sheet handle */
+.bs-handle{width:36px;height:4px;background:#444;border-radius:2px;margin:8px auto 4px}
 
+/* Toast */
+.toast{animation:fadeUp .3s ease both}
+.toast.out{animation:fadeIn .2s ease reverse both}
+
+/* Estrellas de calificación */
+.star-btn{transition:transform .15s,color .15s}
+.star-btn:hover,.star-btn.lit{color:#FBBF24;transform:scale(1.15)}
+
+/* Overlay del menú */
+.menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;opacity:0;pointer-events:none;transition:opacity .3s}
+.menu-overlay.open{opacity:1;pointer-events:auto}
+
+/* Gradientes sobre mapa */
+.map-top-grad{position:fixed;top:0;left:0;right:0;height:120px;background:linear-gradient(to bottom,#0A0A0A 0%,transparent 100%);z-index:5;pointer-events:none}
+.map-bot-grad{position:fixed;bottom:0;left:0;right:0;height:200px;background:linear-gradient(to top,#0A0A0A 0%,transparent 100%);z-index:5;pointer-events:none}
+
+/* Input sin autofill azul */
+input:-webkit-autofill{-webkit-box-shadow:0 0 0 30px #1C1C1C inset!important;-webkit-text-fill-color:#F0F0F0!important}
+
+/* Shimmer loading */
+.shimmer{background:linear-gradient(90deg,#1C1C1C 25%,#262626 50%,#1C1C1C 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
+
+/* Ruta en mapa */
+.leaflet-overlay-pane svg path{stroke:#FF6B35!important;stroke-width:4!important;stroke-linecap:round!important;stroke-dasharray:none!important;fill:none!important;opacity:.8}
 </style>
 </head>
-
 <body>
 
-<nav>
-  <a href="nosotros.html">Nosotros</a>
-  <a href="numeros.html">Números</a>
-  <a href="cooperativa.html">Cooperativa</a>
-</nav>
+<!-- MAPA SIEMPRE PRESENTE -->
+<div id="map-container"><div id="map"></div></div>
+<div class="map-top-grad" id="map-top-grad" style="display:none"></div>
+<div class="map-bot-grad" id="map-bot-grad" style="display:none"></div>
 
-<section class="hero">
-  <h1>Cooperativa Unira</h1>
-
-  <h2 class="pulse">BUSCAMOS 50 SOCIOS FUNDADORES</h2>
-
-  <p>
-  Conductores creando su propia app.<br>
-  Basta de comisiones del 30% o 40%.
-  </p>
-
-  <a class="btn" href="https://forms.gle/D6J3PQNWERqS78Vd9" target="_blank">
-    COMPLETAR FORMULARIO
-  </a>
+<!-- ==================== SPLASH ==================== -->
+<section id="splash-screen" class="screen flex flex-col items-center justify-center bg-bg z-50">
+  <div class="relative mb-6" style="animation:float 2s ease-in-out infinite">
+    <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+      <circle cx="36" cy="36" r="33" stroke="#FF6B35" stroke-width="2.5" opacity=".3"/>
+      <circle cx="36" cy="36" r="33" stroke="#FF6B35" stroke-width="2.5" stroke-dasharray="8 6" style="animation:spin 8s linear infinite;transform-origin:center"/>
+      <path d="M22 46 Q29 18,36 32 Q43 46,50 18" stroke="#FF6B35" stroke-width="3" stroke-linecap="round" fill="none"/>
+    </svg>
+  </div>
+  <h1 class="text-3xl font-extrabold tracking-tight text-txt">Voya</h1>
+  <p class="text-txt-s text-sm mt-1">Tu viaje, tu manera</p>
+  <div class="mt-10 w-48 h-1 bg-elevated rounded-full overflow-hidden">
+    <div class="h-full bg-accent rounded-full" style="animation:shimmer 1.2s ease infinite;width:60%"></div>
+  </div>
 </section>
 
-<!-- WHATSAPP -->
-<a class="whatsapp" href="https://wa.me/5491155976414" target="_blank">
-💬
-</a>
+<!-- ==================== LOGIN ==================== -->
+<section id="login-screen" class="screen hidden flex flex-col bg-bg z-30">
+  <div class="flex-1 flex flex-col justify-end pb-8 px-6">
+    <div class="anim-fade-up">
+      <div class="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-6">
+        <span class="material-icons-round text-accent text-3xl">directions_car</span>
+      </div>
+      <h2 class="text-3xl font-extrabold leading-tight">Bienvenido<br>a Voya</h2>
+      <p class="text-txt-s mt-2 text-sm leading-relaxed">Ingresa tu numero para comenzar a viajar con seguridad.</p>
+    </div>
 
+    <div class="mt-8 space-y-4 anim-fade-up" style="animation-delay:.15s" id="login-phone-step">
+      <div class="relative">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-txt-s text-sm font-semibold">+52</span>
+        <input id="phone-input" type="tel" maxlength="13" placeholder="(55) 1234-5678"
+          class="w-full bg-surface border border-bdr rounded-xl py-4 pl-14 pr-4 text-txt text-base outline-none focus:border-accent transition placeholder:text-txt-s/50"/>
+      </div>
+      <button id="btn-continue-phone" class="btn-press w-full bg-accent hover:bg-accent-h text-white font-bold py-4 rounded-xl text-base transition disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+        Continuar
+      </button>
+    </div>
+
+    <div class="mt-8 space-y-4 hidden" id="login-otp-step">
+      <p class="text-sm text-txt-s">Codigo de verificacion enviado al <span id="otp-phone-display" class="text-txt font-semibold"></span></p>
+      <div class="flex gap-3 justify-center" id="otp-inputs">
+        <input type="tel" maxlength="1" class="otp-box w-14 h-14 bg-surface border border-bdr rounded-xl text-center text-xl font-bold text-txt outline-none focus:border-accent transition"/>
+        <input type="tel" maxlength="1" class="otp-box w-14 h-14 bg-surface border border-bdr rounded-xl text-center text-xl font-bold text-txt outline-none focus:border-accent transition"/>
+        <input type="tel" maxlength="1" class="otp-box w-14 h-14 bg-surface border border-bdr rounded-xl text-center text-xl font-bold text-txt outline-none focus:border-accent transition"/>
+        <input type="tel" maxlength="1" class="otp-box w-14 h-14 bg-surface border border-bdr rounded-xl text-center text-xl font-bold text-txt outline-none focus:border-accent transition"/>
+      </div>
+      <button id="btn-verify-otp" class="btn-press w-full bg-accent hover:bg-accent-h text-white font-bold py-4 rounded-xl text-base transition disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+        Verificar
+      </button>
+      <button id="btn-resend-otp" class="w-full text-txt-s text-sm hover:text-txt transition py-2">Reenviar codigo</button>
+    </div>
+
+    <p class="text-center text-txt-s/60 text-xs mt-6">Al continuar, aceptas los <span class="text-accent">Terminos de Servicio</span> y <span class="text-accent">Politica de Privacidad</span></p>
+  </div>
+</section>
+
+<!-- ==================== HOME UI (sobre el mapa) ==================== -->
+<div id="home-ui" class="hidden" style="position:fixed;inset:0;z-index:10;pointer-events:none">
+  <!-- Barra superior -->
+  <header class="flex items-center justify-between px-4 pt-4" style="pointer-events:auto">
+    <button id="btn-menu" class="btn-press w-11 h-11 bg-card/90 backdrop-blur-md rounded-full flex items-center justify-center border border-bdr/50">
+      <span class="material-icons-round text-txt text-xl">menu</span>
+    </button>
+    <div class="flex gap-2">
+      <button id="btn-notif" class="btn-press w-11 h-11 bg-card/90 backdrop-blur-md rounded-full flex items-center justify-center border border-bdr/50 relative">
+        <span class="material-icons-round text-txt text-xl">notifications_none</span>
+        <span class="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Barra de búsqueda -->
+  <div class="absolute bottom-0 left-0 right-0 px-4 pb-6" style="pointer-events:auto">
+    <div class="bg-card/95 backdrop-blur-md rounded-2xl border border-bdr/60 p-4 shadow-2xl shadow-black/40">
+      <button id="btn-search" class="btn-press w-full flex items-center gap-3 bg-surface rounded-xl px-4 py-3.5 border border-bdr/50 hover:border-accent/30 transition">
+        <span class="material-icons-round text-accent text-xl">search</span>
+        <span class="text-txt-s text-sm">¿A donde vas?</span>
+      </button>
+      <div class="flex gap-3 mt-3">
+        <button class="btn-press flex-1 flex items-center gap-2 bg-surface rounded-lg px-3 py-2.5 border border-bdr/40 hover:border-accent/30 transition text-left" onclick="selectSavedPlace('Casa','Av. Insurgentes Sur 1524, CDMX',19.376,-99.185)">
+          <span class="material-icons-round text-accent text-lg">home</span>
+          <span class="text-sm text-txt truncate">Casa</span>
+        </button>
+        <button class="btn-press flex-1 flex items-center gap-2 bg-surface rounded-lg px-3 py-2.5 border border-bdr/40 hover:border-accent/30 transition text-left" onclick="selectSavedPlace('Trabajo','Reforma 222, Juarez',19.4294,-99.168)">
+          <span class="material-icons-round text-accent text-lg">work</span>
+          <span class="text-sm text-txt truncate">Trabajo</span>
+        </button>
+      </div>
+      <div id="nearby-drivers-info" class="flex items-center gap-2 mt-3 pt-3 border-t border-bdr/40">
+        <div class="flex -space-x-1">
+          <span class="material-icons-round text-accent text-sm">directions_car</span>
+          <span class="material-icons-round text-accent/60 text-sm">directions_car</span>
+          <span class="material-icons-round text-accent/30 text-sm">directions_car</span>
+        </div>
+        <span class="text-xs text-txt-s">3 conductores cerca</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PANEL DE BÚSQUEDA ==================== -->
+<section id="search-panel" class="screen slide-up z-20 bg-bg">
+  <div class="flex flex-col h-full">
+    <div class="flex items-center gap-3 px-4 pt-4 pb-2">
+      <button id="btn-search-back" class="btn-press w-10 h-10 rounded-full bg-surface flex items-center justify-center">
+        <span class="material-icons-round text-txt text-xl">arrow_back</span>
+      </button>
+      <div class="flex-1 relative">
+        <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-accent text-lg">search</span>
+        <input id="search-input" type="text" placeholder="Buscar destino" class="w-full bg-surface border border-bdr rounded-xl py-3 pl-10 pr-4 text-txt text-sm outline-none focus:border-accent transition placeholder:text-txt-s/50"/>
+      </div>
+    </div>
+
+    <!-- Puntos de ruta -->
+    <div class="mx-4 mt-2 flex gap-3">
+      <div class="flex flex-col items-center py-2">
+        <div class="w-3 h-3 rounded-full bg-success border-2 border-success/30"></div>
+        <div class="w-0.5 flex-1 bg-bdr my-1"></div>
+        <div class="w-3 h-3 rounded-full bg-accent border-2 border-accent/30"></div>
+      </div>
+      <div class="flex-1 space-y-2">
+        <div class="bg-surface rounded-lg px-3 py-2.5 text-sm text-txt border border-bdr/50">Mi ubicacion actual</div>
+        <div class="bg-surface rounded-lg px-3 py-2.5 text-sm text-txt-s border border-accent/40 border-dashed">Selecciona un destino</div>
+      </div>
+    </div>
+
+    <!-- Lugares recientes y sugerencias -->
+    <div class="flex-1 overflow-y-auto px-4 mt-4 pb-4" id="search-results">
+      <p class="text-xs font-semibold text-txt-s uppercase tracking-wider mb-3">Lugares recientes</p>
+      <div id="recent-places" class="space-y-1"></div>
+      <p class="text-xs font-semibold text-txt-s uppercase tracking-wider mb-3 mt-5">Sugerencias</p>
+      <div id="suggested-places" class="space-y-1"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== PANEL DE CONFIRMACIÓN ==================== -->
+<section id="confirm-panel" class="screen slide-up z-20 bg-bg">
+  <div class="flex flex-col h-full">
+    <div class="flex items-center gap-3 px-4 pt-4 pb-2">
+      <button id="btn-confirm-back" class="btn-press w-10 h-10 rounded-full bg-surface flex items-center justify-center">
+        <span class="material-icons-round text-txt text-xl">arrow_back</span>
+      </button>
+      <div class="flex-1">
+        <p class="text-sm font-semibold text-txt" id="confirm-dest-name">Destino</p>
+        <p class="text-xs text-txt-s" id="confirm-dest-addr">Direccion</p>
+      </div>
+      <button id="btn-edit-dest" class="btn-press w-10 h-10 rounded-full bg-surface flex items-center justify-center">
+        <span class="material-icons-round text-txt text-lg">edit</span>
+      </button>
+    </div>
+
+    <!-- Info de ruta -->
+    <div class="mx-4 mt-2 flex gap-3">
+      <div class="flex flex-col items-center py-1">
+        <div class="w-2.5 h-2.5 rounded-full bg-success"></div>
+        <div class="w-0.5 flex-1 bg-bdr my-1"></div>
+        <div class="w-2.5 h-2.5 rounded-full bg-accent"></div>
+      </div>
+      <div class="flex-1 space-y-1.5">
+        <div class="text-sm text-txt" id="confirm-pickup">Mi ubicacion</div>
+        <div class="flex items-center gap-2 text-xs text-txt-s">
+          <span class="material-icons-round text-sm">schedule</span>
+          <span id="confirm-eta-route">~12 min</span>
+          <span class="mx-1">·</span>
+          <span id="confirm-dist">5.2 km</span>
+        </div>
+        <div class="text-sm text-txt" id="confirm-dest">Destino</div>
+      </div>
+    </div>
+
+    <!-- Selección de vehículo -->
+    <div class="flex-1 overflow-y-auto px-4 mt-4 pb-4">
+      <p class="text-xs font-semibold text-txt-s uppercase tracking-wider mb-3">Elige tu viaje</p>
+      <div id="vehicle-list" class="space-y-2"></div>
+
+      <!-- Forma de pago -->
+      <div class="mt-5 flex items-center justify-between bg-surface rounded-xl px-4 py-3 border border-bdr/50">
+        <div class="flex items-center gap-3">
+          <span class="material-icons-round text-txt-s text-xl">account_balance_wallet</span>
+          <div>
+            <p class="text-sm font-medium text-txt" id="payment-method">Efectivo</p>
+            <p class="text-xs text-txt-s">Metodo de pago</p>
+          </div>
+        </div>
+        <button class="btn-press text-accent text-sm font-semibold" id="btn-change-payment">Cambiar</button>
+      </div>
+    </div>
+
+    <!-- Botón solicitar -->
+    <div class="px-4 pb-6 pt-3 border-t border-bdr/40 bg-bg">
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-txt-s text-sm">Precio estimado</p>
+        <p class="text-2xl font-extrabold text-txt" id="confirm-price">$0</p>
+      </div>
+      <button id="btn-request" class="btn-press w-full bg-accent hover:bg-accent-h text-white font-bold py-4 rounded-xl text-base transition disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+        Solicitar Voya
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== PANTALLA DE EMPAREJAMIENTO ==================== -->
+<section id="matching-screen" class="screen fade-in z-25 bg-bg/95 backdrop-blur-sm flex flex-col items-center justify-center">
+  <div class="relative mb-8">
+    <div class="w-24 h-24 rounded-full border-2 border-accent/30 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style="animation:matchRing 1.8s ease-out infinite"></div>
+    <div class="w-24 h-24 rounded-full border-2 border-accent/20 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style="animation:matchRing 1.8s ease-out infinite .6s"></div>
+    <div class="w-20 h-20 rounded-full bg-surface border-2 border-accent flex items-center justify-center relative z-10">
+      <span class="material-icons-round text-accent text-4xl">directions_car</span>
+    </div>
+  </div>
+  <p class="text-lg font-bold text-txt anim-fade-up" id="matching-text">Buscando conductor...</p>
+  <p class="text-sm text-txt-s mt-1 anim-fade-up" style="animation-delay:.1s" id="matching-sub">Esto puede tomar unos segundos</p>
+  <div class="mt-8 flex gap-1">
+    <div class="w-2 h-2 rounded-full bg-accent" style="animation:float .8s ease-in-out infinite"></div>
+    <div class="w-2 h-2 rounded-full bg-accent" style="animation:float .8s ease-in-out infinite .2s"></div>
+    <div class="w-2 h-2 rounded-full bg-accent" style="animation:float .8s ease-in-out infinite .4s"></div>
+  </div>
+  <button id="btn-cancel-match" class="btn-press mt-10 text-txt-s text-sm border border-bdr rounded-full px-6 py-2 hover:text-txt hover:border-txt-s transition">
+    Cancelar
+  </button>
+</section>
+
+<!-- ==================== PANEL DE VIAJE ==================== -->
+<section id="trip-panel" class="screen slide-up z-20 bg-bg">
+  <div class="flex flex-col h-full">
+    <!-- Status bar del viaje -->
+    <div class="px-4 pt-4 pb-3 border-b border-bdr/40">
+      <div class="flex items-center gap-2" id="trip-status-bar">
+        <div class="w-2.5 h-2.5 rounded-full bg-accent animate-pulse"></div>
+        <p class="text-sm font-semibold text-txt" id="trip-status-text">Conductor en camino</p>
+      </div>
+      <div class="flex items-center gap-3 mt-2">
+        <span class="material-icons-round text-accent text-lg">schedule</span>
+        <span class="text-2xl font-extrabold text-txt" id="trip-eta">4 min</span>
+        <span class="text-sm text-txt-s">de llegada</span>
+      </div>
+    </div>
+
+    <!-- Info del conductor -->
+    <div class="px-4 py-4 flex items-center gap-4">
+      <div class="w-14 h-14 rounded-full bg-surface overflow-hidden border-2 border-bdr flex-shrink-0">
+        <img id="trip-driver-img" src="https://picsum.photos/seed/driver1/100/100.jpg" alt="Conductor" class="w-full h-full object-cover"/>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="font-bold text-txt text-base" id="trip-driver-name">Carlos M.</p>
+        <p class="text-sm text-txt-s truncate" id="trip-driver-car">Honda Civic 2022 · ABC-123</p>
+        <div class="flex items-center gap-1 mt-0.5">
+          <span class="material-icons-round text-warn text-sm">star</span>
+          <span class="text-sm font-semibold text-txt" id="trip-driver-rating">4.9</span>
+          <span class="text-xs text-txt-s">(1,247 viajes)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones del conductor -->
+    <div class="flex gap-3 px-4">
+      <button class="btn-press flex-1 flex items-center justify-center gap-2 bg-surface rounded-xl py-3 border border-bdr/50 hover:border-accent/30 transition">
+        <span class="material-icons-round text-accent text-lg">chat_bubble_outline</span>
+        <span class="text-sm font-medium text-txt">Mensaje</span>
+      </button>
+      <button class="btn-press flex-1 flex items-center justify-center gap-2 bg-surface rounded-xl py-3 border border-bdr/50 hover:border-accent/30 transition">
+        <span class="material-icons-round text-accent text-lg">call</span>
+        <span class="text-sm font-medium text-txt">Llamar</span>
+      </button>
+      <button class="btn-press w-12 flex items-center justify-center bg-surface rounded-xl border border-bdr/50 hover:border-danger/30 transition" onclick="showToast('Compartiendo tu viaje...','info')">
+        <span class="material-icons-round text-txt-s text-lg">share</span>
+      </button>
+    </div>
+
+    <!-- Ruta resumen -->
+    <div class="mx-4 mt-4 flex gap-3">
+      <div class="flex flex-col items-center py-1">
+        <div class="w-2.5 h-2.5 rounded-full bg-success"></div>
+        <div class="w-0.5 flex-1 bg-bdr my-1"></div>
+        <div class="w-2.5 h-2.5 rounded-full bg-accent"></div>
+      </div>
+      <div class="flex-1 space-y-2">
+        <p class="text-sm text-txt" id="trip-pickup">Mi ubicacion</p>
+        <p class="text-sm text-txt" id="trip-dest">Destino</p>
+      </div>
+    </div>
+
+    <!-- Precio y metodo de pago -->
+    <div class="mx-4 mt-4 bg-surface rounded-xl p-4 border border-bdr/40 flex items-center justify-between">
+      <div>
+        <p class="text-xs text-txt-s">Precio estimado</p>
+        <p class="text-lg font-bold text-txt" id="trip-price">$0</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="material-icons-round text-txt-s text-lg">account_balance_wallet</span>
+        <span class="text-sm text-txt" id="trip-payment">Efectivo</span>
+      </div>
+    </div>
+
+    <div class="flex-1"></div>
+
+    <!-- Botón de seguridad -->
+    <div class="px-4 pb-6 pt-3">
+      <button id="btn-cancel-trip" class="btn-press w-full text-danger text-sm font-semibold border border-danger/30 rounded-xl py-3 hover:bg-danger/10 transition">
+        Cancelar viaje
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== MODAL DE CALIFICACIÓN ==================== -->
+<section id="rating-screen" class="screen fade-in z-30 bg-bg flex flex-col items-center justify-center px-6">
+  <div class="text-center anim-scale-in w-full max-w-sm">
+    <div class="w-20 h-20 rounded-full bg-surface overflow-hidden border-2 border-bdr mx-auto mb-4">
+      <img id="rating-driver-img" src="https://picsum.photos/seed/driver1/100/100.jpg" alt="Conductor" class="w-full h-full object-cover"/>
+    </div>
+    <p class="text-xl font-bold text-txt" id="rating-driver-name">Carlos M.</p>
+    <p class="text-sm text-txt-s mt-1">¿Como fue tu viaje?</p>
+
+    <div class="flex items-center justify-center gap-2 mt-5" id="rating-stars">
+      <button class="star-btn text-4xl text-elevated" data-star="1"><span class="material-icons-round">star</span></button>
+      <button class="star-btn text-4xl text-elevated" data-star="2"><span class="material-icons-round">star</span></button>
+      <button class="star-btn text-4xl text-elevated" data-star="3"><span class="material-icons-round">star</span></button>
+      <button class="star-btn text-4xl text-elevated" data-star="4"><span class="material-icons-round">star</span></button>
+      <button class="star-btn text-4xl text-elevated" data-star="5"><span class="material-icons-round">star</span></button>
+    </div>
+    <p class="text-sm text-txt-s mt-2 h-5" id="rating-label"></p>
+
+    <!-- Propina -->
+    <p class="text-xs font-semibold text-txt-s uppercase tracking-wider mt-5 mb-2">Agregar propina</p>
+    <div class="flex gap-2 justify-center" id="tip-options">
+      <button class="btn-press tip-btn bg-surface border border-bdr rounded-lg px-4 py-2 text-sm text-txt font-medium hover:border-accent/40 transition" data-tip="0">$0</button>
+      <button class="btn-press tip-btn bg-surface border border-bdr rounded-lg px-4 py-2 text-sm text-txt font-medium hover:border-accent/40 transition" data-tip="10">$10</button>
+      <button class="btn-press tip-btn bg-surface border border-bdr rounded-lg px-4 py-2 text-sm text-txt font-medium hover:border-accent/40 transition" data-tip="20">$20</button>
+      <button class="btn-press tip-btn bg-surface border border-bdr rounded-lg px-4 py-2 text-sm text-txt font-medium hover:border-accent/40 transition" data-tip="50">$50</button>
+    </div>
+
+    <button id="btn-submit-rating" class="btn-press w-full bg-accent hover:bg-accent-h text-white font-bold py-4 rounded-xl text-base mt-6 transition disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+      Enviar calificacion
+    </button>
+    <button id="btn-skip-rating" class="w-full text-txt-s text-sm mt-3 py-2 hover:text-txt transition">Omitir</button>
+  </div>
+</section>
+
+<!-- ==================== MENÚ LATERAL ==================== -->
+<div class="menu-overlay" id="menu-overlay"></div>
+<aside id="side-menu" class="fixed top-0 left-0 bottom-0 w-80 bg-card z-50 transform -translate-x-full transition-transform duration-300 ease-out border-r border-bdr/40 flex flex-col">
+  <div class="p-5 border-b border-bdr/40 flex items-center gap-4">
+    <div class="w-14 h-14 rounded-full bg-surface overflow-hidden border-2 border-bdr flex-shrink-0">
+      <img src="https://picsum.photos/seed/user42/100/100.jpg" alt="Perfil" class="w-full h-full object-cover"/>
+    </div>
+    <div class="min-w-0">
+      <p class="font-bold text-txt text-base">Alejandro R.</p>
+      <div class="flex items-center gap-1">
+        <span class="material-icons-round text-warn text-sm">star</span>
+        <span class="text-sm font-medium text-txt">4.95</span>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 overflow-y-auto py-2">
+    <button class="menu-item w-full flex items-center gap-4 px-5 py-3.5 hover:bg-surface transition text-left" data-screen="home">
+      <span class="material-icons-round text-txt-s text-xl">home</span>
+      <span class="text-sm font-medium text-txt">Inicio</span>
+    </button>
+    <button class="menu-item w-full flex items-center gap-4 px-5 py-3.5 hover:bg-surface transition text-left" data-screen="history">
+      <span class="material-icons-round text-txt-s text-xl">history</span>
+      <span class="text-sm font-medium text-txt">Mis viajes</span>
+    </button>
+    <button class="menu-item w-full flex items-center gap-4 px-5 py-3.5 hover:bg-surface transition text-left" data-screen="wallet">
+      <span class="material-icons-round text-txt-s text-xl">account_balance_wallet</span>
+      <span class="text-sm font-medium text-txt">Billetera</span>
+    </button>
+    <button class="menu-item w-full flex items-center gap-4 px-5 py-3.5 hover:bg-surface transition text-left" data-screen="profile">
+      <span class="material-icons-round text-txt-s text-xl">person</span>
+      <span class="text-sm font-medium text-txt">Mi perfil</span>
+    </button>
+    <div class="mx-5 my-2 border-t border-bdr/40"></div>
+    <button class="menu-item w-full flex items-center gap-4 px-5 py-3.5 hover:bg-surface transition text-left" onclick="showToast('Configuracion en desarrollo','info')">
+      <span class="material-icons-round text-txt-s text-xl">settings</span>
+      <span class="text-sm font-medium text-txt">Configuracion</span>
+    </button>
+    <button class="menu-item w-full flex items-center gap-4 px-5 py-3.5 hover:bg-surface transition text-left" onclick="showToast('Centro de ayuda en desarrollo','info')">
+      <span class="material-icons-round text-txt-s text-xl">help_outline</span>
+      <span class="text-sm font-medium text-txt">Ayuda</span>
+    </button>
+  </nav>
+  <div class="p-4 border-t border-bdr/40">
+    <button id="btn-logout" class="btn-press w-full flex items-center justify-center gap-2 text-danger text-sm font-semibold py-3 rounded-xl hover:bg-danger/10 transition">
+      <span class="material-icons-round text-lg">logout</span>
+      Cerrar sesion
+    </button>
+  </div>
+</aside>
+
+<!-- ==================== HISTORIAL ==================== -->
+<section id="history-screen" class="screen hidden z-30 bg-bg flex flex-col">
+  <header class="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-bdr/40">
+    <button class="btn-back btn-press w-10 h-10 rounded-full bg-surface flex items-center justify-center">
+      <span class="material-icons-round text-txt text-xl">arrow_back</span>
+    </button>
+    <h2 class="text-lg font-bold text-txt">Mis viajes</h2>
+  </header>
+  <div class="flex-1 overflow-y-auto px-4 py-4 space-y-3" id="history-list"></div>
+</section>
+
+<!-- ==================== BILLETERA ==================== -->
+<section id="wallet-screen" class="screen hidden z-30 bg-bg flex flex-col">
+  <header class="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-bdr/40">
+    <button class="btn-back btn-press w-10 h-10 rounded-full bg-surface flex items-center justify-center">
+      <span class="material-icons-round text-txt text-xl">arrow_back</span>
+    </button>
+    <h2 class="text-lg font-bold text-txt">Billetera</h2>
+  </header>
+  <div class="flex-1 overflow-y-auto px-4 py-4">
+    <div class="bg-gradient-to-br from-accent/20 to-accent/5 rounded-2xl p-5 border border-accent/20">
+      <p class="text-sm text-txt-s">Saldo disponible</p>
+      <p class="text-4xl font-extrabold text-txt mt-1">$248.00</p>
+      <button class="btn-press mt-4 bg-accent hover:bg-accent-h text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition" onclick="showToast('Recarga en desarrollo','info')">Recargar saldo</button>
+    </div>
+    <p class="text-xs font-semibold text-txt-s uppercase tracking-wider mt-6 mb-3">Metodos de pago</p>
+    <div class="space-y-2">
+      <div class="bg-surface rounded-xl p-4 border border-bdr/50 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center"><span class="material-icons-round text-success text-xl">payments</span></div>
+        <div class="flex-1"><p class="text-sm font-medium text-txt">Efectivo</p><p class="text-xs text-txt-s">Pago al finalizar</p></div>
+        <span class="text-xs text-accent font-semibold bg-accent/10 px-2 py-1 rounded">Activo</span>
+      </div>
+      <div class="bg-surface rounded-xl p-4 border border-bdr/50 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center"><span class="material-icons-round text-blue-400 text-xl">credit_card</span></div>
+        <div class="flex-1"><p class="text-sm font-medium text-txt">Visa ****4821</p><p class="text-xs text-txt-s">Expira 08/27</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== PERFIL ==================== -->
+<section id="profile-screen" class="screen hidden z-30 bg-bg flex flex-col">
+  <header class="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-bdr/40">
+    <button class="btn-back btn-press w-10 h-10 rounded-full bg-surface flex items-center justify-center">
+      <span class="material-icons-round text-txt text-xl">arrow_back</span>
+    </button>
+    <h2 class="text-lg font-bold text-txt">Mi perfil</h2>
+  </header>
+  <div class="flex-1 overflow-y-auto px-4 py-4">
+    <div class="flex flex-col items-center">
+      <div class="w-24 h-24 rounded-full bg-surface overflow-hidden border-3 border-bdr mb-3">
+        <img src="https://picsum.photos/seed/user42/200/200.jpg" alt="Perfil" class="w-full h-full object-cover"/>
+      </div>
+      <button class="btn-press text-accent text-sm font-semibold flex items-center gap-1" onclick="showToast('Edicion de foto en desarrollo','info')">
+        <span class="material-icons-round text-base">camera_alt</span> Cambiar foto
+      </button>
+    </div>
+    <div class="mt-6 space-y-3">
+      <div class="bg-surface rounded-xl p-4 border border-bdr/50">
+        <p class="text-xs text-txt-s mb-1">Nombre completo</p>
+        <p class="text-sm font-medium text-txt">Alejandro Reyes Martinez</p>
+      </div>
+      <div class="bg-surface rounded-xl p-4 border border-bdr/50">
+        <p class="text-xs text-txt-s mb-1">Telefono</p>
+        <p class="text-sm font-medium text-txt">+52 55 1234 5678</p>
+      </div>
+      <div class="bg-surface rounded-xl p-4 border border-bdr/50">
+        <p class="text-xs text-txt-s mb-1">Correo electronico</p>
+        <p class="text-sm font-medium text-txt">alejandro.reyes@email.com</p>
+      </div>
+      <div class="bg-surface rounded-xl p-4 border border-bdr/50 flex items-center justify-between">
+        <div><p class="text-xs text-txt-s mb-1">Calificacion como pasajero</p><p class="text-sm font-medium text-txt">4.95 promedio</p></div>
+        <div class="flex items-center gap-1"><span class="material-icons-round text-warn">star</span><span class="text-lg font-bold text-txt">4.95</span></div>
+      </div>
+      <div class="bg-surface rounded-xl p-4 border border-bdr/50">
+        <p class="text-xs text-txt-s mb-1">Total de viajes</p>
+        <p class="text-sm font-medium text-txt">87 viajes</p>
+      </div>
+    </div>
+    <button class="btn-press w-full mt-6 bg-surface border border-bdr/50 rounded-xl py-3.5 text-sm font-medium text-txt hover:bg-elevated transition flex items-center justify-center gap-2" onclick="showToast('Edicion de perfil en desarrollo','info')">
+      <span class="material-icons-round text-lg text-accent">edit</span> Editar perfil
+    </button>
+  </div>
+</section>
+
+<!-- ==================== TOASTS ==================== -->
+<div id="toast-container" class="fixed top-4 left-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none"></div>
+
+<!-- ==================== MODAL DE PAGO ==================== -->
+<section id="payment-modal" class="screen fade-in z-35 bg-bg/90 backdrop-blur-sm flex items-end justify-center">
+  <div class="bg-card w-full max-w-md rounded-t-2xl border-t border-bdr/60 p-5 anim-slide-up">
+    <div class="bs-handle"></div>
+    <p class="text-base font-bold text-txt mt-2 mb-4">Metodo de pago</p>
+    <div class="space-y-2" id="payment-options">
+      <button class="pay-option btn-press w-full flex items-center gap-3 bg-surface rounded-xl p-4 border-2 border-accent text-left" data-method="Efectivo">
+        <span class="material-icons-round text-success text-xl">payments</span>
+        <span class="text-sm font-medium text-txt flex-1">Efectivo</span>
+        <span class="material-icons-round text-accent text-xl">check_circle</span>
+      </button>
+      <button class="pay-option btn-press w-full flex items-center gap-3 bg-surface rounded-xl p-4 border-2 border-transparent text-left hover:border-bdr" data-method="Visa ****4821">
+        <span class="material-icons-round text-blue-400 text-xl">credit_card</span>
+        <span class="text-sm font-medium text-txt flex-1">Visa ****4821</span>
+      </button>
+      <button class="pay-option btn-press w-full flex items-center gap-3 bg-surface rounded-xl p-4 border-2 border-transparent text-left hover:border-bdr" data-method="Saldo Voya">
+        <span class="material-icons-round text-accent text-xl">account_balance_wallet</span>
+        <span class="text-sm font-medium text-txt flex-1">Saldo Voya ($248.00)</span>
+      </button>
+    </div>
+    <button id="btn-close-payment" class="btn-press w-full mt-4 py-3 text-txt-s text-sm font-medium hover:text-txt transition">Cerrar</button>
+  </div>
+</section>
+
+<script>
+// ==========================================
+// DATOS SIMULADOS
+// ==========================================
+const USER_LOCATION = { lat: 19.4326, lng: -99.1332 };
+
+const PLACES = [
+  { name:'Angel de la Independencia', addr:'Av. P.o de la Reforma, Juarez', lat:19.427, lng:-99.1677 },
+  { name:'World Trade Center', addr:'Monte Pelvoux 110, Npoles', lat:19.4271, lng:-99.1398 },
+  { name:'Auditorio Nacional', addr:'Reforma 50, Polanco', lat:19.4333, lng:-99.1945 },
+  { name:'Antara Fashion Hall', addr:'Av. Presidente Masaryk 36, Polanco', lat:19.434, lng:-99.195 },
+  { name:'Centro Historico (Zocalo)', addr:'Plaza de la Constitucion, Centro', lat:19.4326, lng:-99.1332 },
+  { name:'Parque Mexico', addr:'Av. Mexico, Condesa', lat:19.411, lng:-99.172 },
+  { name:'Aeropuerto Internacional CDMX', addr:'Terminal 1, Av. Capitan Carlos Leon', lat:19.4363, lng:-99.0721 },
+  { name:'Estadio Azteca', addr:'Calzada de las Aguilas 404, Coyoacan', lat:19.4153, lng:-99.1542 },
+  { name:'Ciudad Universitaria', addr:'Av. Universidad 3000, Coyoacan', lat:19.332, lng:-99.189 },
+  { name:'Santa Fe Centro Comercial', addr:'Av. Vasco de Quiroga 3800', lat:19.3593, lng:-99.2749 },
+  { name:'Reforma 222', addr:'Paseo de la Reforma 222, Juarez', lat:19.4294, lng:-99.168 },
+  { name:'Torre Latinoamericana', addr:'Eje Central Lázaro Cárdenas 2', lat:19.4352, lng:-99.1413 }
+];
+
+const RECENT_PLACES = [PLACES[0], PLACES[6], PLACES[2], PLACES[7]];
+
+const VEHICLES = [
+  { id:'moto', name:'Voya Moto', icon:'two_wheeler', desc:'Rapida y economica', pax:1, base:15, perKm:5, eta:3, color:'#818CF8' },
+  { id:'eco', name:'Voya Eco', icon:'directions_car', desc:'Viaje accesible', pax:4, base:25, perKm:8, eta:5, color:'#34D399' },
+  { id:'standard', name:'Voya Standard', icon:'local_taxi', desc:'Tu viaje de siempre', pax:4, base:35, perKm:10, eta:4, color:'#FF6B35' },
+  { id:'premium', name:'Voya Premium', icon:'airport_shuttle', desc:'Mayor confort', pax:4, base:60, perKm:15, eta:6, color:'#FBBF24' },
+  { id:'suv', name:'Voya SUV', icon:'airport_shuttle', desc:'Espacio para todos', pax:6, base:50, perKm:13, eta:7, color:'#F472B6' }
+];
+
+const DRIVERS = [
+  { name:'Carlos M.', car:'Honda Civic 2022', plate:'ABC-1234', rating:4.9, trips:1247, img:'driver1' },
+  { name:'Maria G.', car:'Toyota Corolla 2023', plate:'DEF-5678', rating:4.8, trips:892, img:'driver2' },
+  { name:'Roberto L.', car:'Nissan Sentra 2021', plate:'GHI-9012', rating:4.7, trips:2103, img:'driver3' },
+  { name:'Ana P.', car:'Mazda 3 2023', plate:'JKL-3456', rating:4.95, trips:567, img:'driver4' },
+  { name:'Diego S.', car:'Hyundai Accent 2022', plate:'MNO-7890', rating:4.85, trips:1580, img:'driver5' }
+];
+
+const TRIP_HISTORY = [
+  { date:'15 Dic 2024, 14:30', origin:'Reforma 222', dest:'Aeropuerto Internacional T1', price:285, type:'Standard', driver:'Carlos M.', rating:5 },
+  { date:'13 Dic 2024, 09:15', origin:'Casa', dest:'World Trade Center', price:95, type:'Eco', driver:'Maria G.', rating:4 },
+  { date:'11 Dic 2024, 20:45', origin:'Parque Mexico', dest:'Casa', price:78, type:'Eco', driver:'Roberto L.', rating:5 },
+  { date:'9 Dic 2024, 18:00', origin:'Torre Latinoamericana', dest:'Santa Fe CC', price:410, type:'Premium', driver:'Ana P.', rating:5 },
+  { date:'7 Dic 2024, 08:30', origin:'Casa', dest:'Ciudad Universitaria', price:125, type:'Standard', driver:'Diego S.', rating:4 },
+  { date:'5 Dic 2024, 22:10', origin:'Antara Fashion Hall', dest:'Casa', price:165, type:'Standard', driver:'Carlos M.', rating:5 },
+  { date:'3 Dic 2024, 11:00', origin:'Casa', dest:'Estadio Azteca', price:145, type:'Eco', driver:'Maria G.', rating:5 }
+];
+
+// ==========================================
+// ESTADO DE LA APP
+// ==========================================
+const state = {
+  currentScreen: 'splash',
+  selectedVehicle: null,
+  selectedDestination: null,
+  paymentMethod: 'Efectivo',
+  tripPrice: 0,
+  tripDistance: 0,
+  tripEta: 0,
+  ratingStars: 0,
+  tip: 0,
+  driverMarkerPositions: [],
+  routeLayer: null,
+  pickupMarker: null,
+  destMarker: null,
+  driverTripMarker: null,
+  tripTimeouts: []
+};
+
+// ==========================================
+// UTILIDADES
+// ==========================================
+function $(id) { return document.getElementById(id); }
+
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2-lat1)*Math.PI/180;
+  const dLon = (lon2-lon1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function calcPrice(vehicle, distKm) {
+  return Math.round(vehicle.base + vehicle.perKm * distKm);
+}
+
+function calcEta(distKm) {
+  const speedKmh = 22;
+  return Math.max(3, Math.round(distKm / speedKmh * 60));
+}
+
+function formatPhone(val) {
+  let d = val.replace(/\D/g,'').slice(0,10);
+  if(d.length <= 2) return d.length ? `(${d}` : '';
+  if(d.length <= 6) return `(${d.slice(0,2)}) ${d.slice(2)}`;
+  return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+}
+
+function genRoutePts(from, to, steps) {
+  const pts = [];
+  for(let i=0; i<=steps; i++){
+    const t = i/steps;
+    const jitter = (Math.random()-0.5)*0.002;
+    pts.push([from.lat+(to.lat-from.lat)*t+jitter, from.lng+(to.lng-from.lng)*t+jitter*(t>0.1&&t<0.9?2:0)]);
+  }
+  return pts;
+}
+
+// ==========================================
+// SISTEMA DE TOASTS
+// ==========================================
+function showToast(msg, type='info') {
+  const container = $('toast-container');
+  const colors = { info:'border-accent bg-accent/10', success:'border-success bg-success/10', error:'border-danger bg-danger/10' };
+  const icons = { info:'info', success:'check_circle', error:'error' };
+  const toast = document.createElement('div');
+  toast.className = `toast pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border ${colors[type]} backdrop-blur-md`;
+  toast.innerHTML = `<span class="material-icons-round text-lg ${type==='success'?'text-success':type==='error'?'text-danger':'text-accent'}">${icons[type]}</span><span class="text-sm font-medium text-txt">${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(()=>{ toast.classList.add('out'); setTimeout(()=>toast.remove(),200); }, 3000);
+}
+
+// ==========================================
+// NAVEGACIÓN
+// ==========================================
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => {
+    if(s.id === name+'-screen' || s.id === name+'-panel') {
+      s.classList.remove('hidden','slide-up');
+      if(s.classList.contains('slide-up') || s.id.includes('panel')) s.classList.add('active');
+      if(s.classList.contains('fade-in')) s.classList.add('active');
+    } else {
+      s.classList.add('hidden');
+      s.classList.remove('active','slide-up');
+    }
+  });
+  // Manejar overlays específicos
+  if(name==='home') {
+    $('home-ui').classList.remove('hidden');
+    $('map-top-grad').style.display='block';
+    $('map-bot-grad').style.display='block';
+  } else if(['search','confirm','matching','trip'].includes(name)) {
+    $('home-ui').classList.add('hidden');
+    $('map-top-grad').style.display = name==='trip'?'block':'none';
+    $('map-bot-grad').style.display = name==='trip'?'none':'none';
+  } else {
+    $('home-ui').classList.add('hidden');
+    $('map-top-grad').style.display='none';
+    $('map-bot-grad').style.display='none';
+  }
+  state.currentScreen = name;
+  if(map) setTimeout(()=>map.invalidateSize(),50);
+}
+
+function hideScreen(name) {
+  const el = $(name+'-screen') || $(name+'-panel');
+  if(el) { el.classList.add('hidden'); el.classList.remove('active'); }
+}
+
+// ==========================================
+// MAPA
+// ==========================================
+let map;
+const driverMarkers = [];
+
+function initMap() {
+  map = L.map('map', {
+    center: [USER_LOCATION.lat, USER_LOCATION.lng],
+    zoom: 15,
+    zoomControl: false,
+    attributionControl: false,
+    doubleClickZoom: false
+  });
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19
+  }).addTo(map);
+
+  // Marcador de usuario
+  const userIcon = L.divIcon({
+    className:'',
+    html:'<div style="position:relative"><div class="user-dot"></div><div class="user-ring"></div></div>',
+    iconSize:[20,20], iconAnchor:[10,10]
+  });
+  L.marker([USER_LOCATION.lat, USER_LOCATION.lng], {icon:userIcon, interactive:false}).addTo(map);
+
+  // Marcadores de conductores simulados
+  for(let i=0; i<5; i++){
+    const angle = (Math.PI*2/5)*i;
+    const r = 0.005 + Math.random()*0.008;
+    const dlat = USER_LOCATION.lat + Math.cos(angle)*r;
+    const dlng = USER_LOCATION.lng + Math.sin(angle)*r;
+    state.driverMarkerPositions.push({lat:dlat, lng:dlng, dlat:(Math.random()-0.5)*0.0002, dlng:(Math.random()-0.5)*0.0002});
+    const dIcon = L.divIcon({
+      className:'driver-marker',
+      html:`<div class="driver-marker-inner"><span class="material-icons-round" style="font-size:16px;color:#FF6B35">directions_car</span></div><div class="driver-marker-pulse"></div>`,
+      iconSize:[36,36], iconAnchor:[18,18]
+    });
+    const m = L.marker([dlat,dlng],{icon:dIcon, interactive:false}).addTo(map);
+    driverMarkers.push(m);
+  }
+
+  // Animar conductores
+  setInterval(moveDrivers, 2000);
+}
+
+function moveDrivers() {
+  state.driverMarkerPositions.forEach((p,i) => {
+    p.lat += p.dlat;
+    p.lng += p.dlng;
+    if(Math.random()<0.1) { p.dlat=(Math.random()-0.5)*0.0002; p.dlng=(Math.random()-0.5)*0.0002; }
+    const bounds = { minLat:USER_LOCATION.lat-0.015, maxLat:USER_LOCATION.lat+0.015, minLng:USER_LOCATION.lng-0.015, maxLng:USER_LOCATION.lng+0.015 };
+    if(p.lat<bounds.minLat||p.lat>bounds.maxLat) p.dlat*=-1;
+    if(p.lng<bounds.minLng||p.lng>bounds.maxLng) p.dlng*=-1;
+    driverMarkers[i].setLatLng([p.lat,p.lng]);
+  });
+}
+
+function drawRoute(from, to) {
+  clearRoute();
+  const pts = genRoutePts(from, to, 30);
+  state.routeLayer = L.polyline(pts, {color:'#FF6B35', weight:4, opacity:0.8, dashArray:null}).addTo(map);
+  map.fitBounds(L.latLngBounds([from, to]), {padding:[100,50], maxZoom:16});
+
+  // Marcador de pickup
+  const pIcon = L.divIcon({ className:'', html:'<div class="pickup-dot"></div>', iconSize:[14,14], iconAnchor:[7,7] });
+  state.pickupMarker = L.marker([from.lat,from.lng],{icon:pIcon,interactive:false}).addTo(map);
+
+  // Marcador de destino
+  const dIcon = L.divIcon({ className:'', html:'<div class="dest-dot"></div>', iconSize:[16,16], iconAnchor:[8,8] });
+  state.destMarker = L.marker([to.lat,to.lng],{icon:dIcon,interactive:false}).addTo(map);
+}
+
+function clearRoute() {
+  if(state.routeLayer) { map.removeLayer(state.routeLayer); state.routeLayer=null; }
+  if(state.pickupMarker) { map.removeLayer(state.pickupMarker); state.pickupMarker=null; }
+  if(state.destMarker) { map.removeLayer(state.destMarker); state.destMarker=null; }
+  if(state.driverTripMarker) { map.removeLayer(state.driverTripMarker); state.driverTripMarker=null; }
+}
+
+function showDriverTripMarker(driverLat, driverLng) {
+  if(state.driverTripMarker) map.removeLayer(state.driverTripMarker);
+  const icon = L.divIcon({
+    className:'driver-marker',
+    html:`<div class="driver-marker-inner" style="border-color:#34D399;box-shadow:0 2px 10px rgba(52,211,153,.4)"><span class="material-icons-round" style="font-size:16px;color:#34D399">directions_car</span></div><div class="driver-marker-pulse" style="background:rgba(52,211,153,.15)"></div>`,
+    iconSize:[36,36], iconAnchor:[18,18]
+  });
+  state.driverTripMarker = L.marker([driverLat,driverLng],{icon,interactive:false}).addTo(map);
+}
+
+// ==========================================
+// LOGIN
+// ==========================================
+function initLogin() {
+  const phoneInput = $('phone-input');
+  const btnContinue = $('btn-continue-phone');
+
+  phoneInput.addEventListener('input', ()=>{
+    phoneInput.value = formatPhone(phoneInput.value);
+    btnContinue.disabled = phoneInput.value.replace(/\D/g,'').length < 10;
+  });
+
+  btnContinue.addEventListener('click', ()=>{
+    const raw = phoneInput.value;
+    $('otp-phone-display').textContent = raw;
+    $('login-phone-step').classList.add('hidden');
+    $('login-otp-step').classList.remove('hidden');
+    $('login-otp-step').classList.add('anim-fade-up');
+    setTimeout(()=>$('otp-inputs').querySelector('input').focus(), 100);
+  });
+
+  // OTP inputs
+  const otpBoxes = $('otp-inputs').querySelectorAll('.otp-box');
+  otpBoxes.forEach((box, i) => {
+    box.addEventListener('input', ()=>{
+      box.value = box.value.replace(/\D/g,'').slice(0,1);
+      if(box.value && i < otpBoxes.length-1) otpBoxes[i+1].focus();
+      const full = Array.from(otpBoxes).every(b=>b.value.length===1);
+      $('btn-verify-otp').disabled = !full;
+    });
+    box.addEventListener('keydown', (e)=>{
+      if(e.key==='Backspace' && !box.value && i>0) otpBoxes[i-1].focus();
+    });
+  });
+
+  $('btn-verify-otp').addEventListener('click', ()=>{
+    localStorage.setItem('voya_logged','1');
+    showScreen('home');
+    showToast('Bienvenido a Voya','success');
+  });
+
+  $('btn-resend-otp').addEventListener('click', ()=>{
+    showToast('Codigo reenviado','info');
+  });
+}
+
+// ==========================================
+// BÚSQUEDA
+// ==========================================
+function initSearch() {
+  const searchInput = $('search-input');
+
+  $('btn-search').addEventListener('click', ()=>{
+    showScreen('search');
+    setTimeout(()=>searchInput.focus(), 400);
+    renderSearchResults('');
+  });
+
+  $('btn-search-back').addEventListener('click', ()=>{
+    showScreen('home');
+    clearRoute();
+    map.setView([USER_LOCATION.lat, USER_LOCATION.lng], 15);
+  });
+
+  searchInput.addEventListener('input', ()=>{
+    renderSearchResults(searchInput.value.trim().toLowerCase());
+  });
+
+  // Render lugares iniciales
+  renderSearchResults('');
+}
+
+function renderSearchResults(query) {
+  const recent = $('recent-places');
+  const suggested = $('suggested-places');
+
+  const filteredRecent = query
+    ? RECENT_PLACES.filter(p => p.name.toLowerCase().includes(query) || p.addr.toLowerCase().includes(query))
+    : RECENT_PLACES;
+  const filteredSuggested = query
+    ? PLACES.filter(p => p.name.toLowerCase().includes(query) || p.addr.toLowerCase().includes(query))
+    : PLACES.filter(p => !RECENT_PLACES.includes(p));
+
+  recent.innerHTML = filteredRecent.length ? filteredRecent.map(p => placeItemHTML(p, true)).join('')
+    : '<p class="text-xs text-txt-s py-2">Sin resultados recientes</p>';
+
+  suggested.innerHTML = filteredSuggested.length ? filteredSuggested.map(p => placeItemHTML(p, false)).join('')
+    : '<p class="text-xs text-txt-s py-2">Sin sugerencias</p>';
+
+  // Click handlers
+  document.querySelectorAll('.place-item').forEach(el => {
+    el.addEventListener('click', ()=>{
+      const idx = parseInt(el.dataset.idx);
+      const isRecent = el.dataset.type === 'recent';
+      const place = isRecent ? RECENT_PLACES[idx] : PLACES.filter(p=>!RECENT_PLACES.includes(p))[idx];
+      if(place) selectDestination(place);
+    });
+  });
+}
+
+function placeItemHTML(place, isRecent) {
+  const list = isRecent ? RECENT_PLACES : PLACES.filter(p=>!RECENT_PLACES.includes(p));
+  const idx = list.indexOf(place);
+  if(idx===-1) return '';
+  return `<button class="place-item w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-surface transition text-left" data-idx="${idx}" data-type="${isRecent?'recent':'suggested'}">
+    <span class="material-icons-round text-txt-s text-lg">${isRecent?'history':'location_on'}</span>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-medium text-txt truncate">${place.name}</p>
+      <p class="text-xs text-txt-s truncate">${place.addr}</p>
+    </div>
+  </button>`;
+}
+
+function selectSavedPlace(name, addr, lat, lng) {
+  selectDestination({ name, addr, lat, lng });
+}
+
+function selectDestination(place) {
+  state.selectedDestination = place;
+  state.tripDistance = parseFloat(haversineKm(USER_LOCATION.lat, USER_LOCATION.lng, place.lat, place.lng).toFixed(1));
+  state.tripEta = calcEta(state.tripDistance);
+
+  drawRoute(USER_LOCATION, place);
+
+  // Actualizar panel de confirmación
+  $('confirm-dest-name').textContent = place.name;
+  $('confirm-dest-addr').textContent = place.addr;
+  $('confirm-pickup').textContent = 'Mi ubicacion actual';
+  $('confirm-dest').textContent = place.name;
+  $('confirm-eta-route').textContent = `~${state.tripEta} min`;
+  $('confirm-dist').textContent = `${state.tripDistance} km`;
+
+  renderVehicleList();
+  state.selectedVehicle = null;
+  $('btn-request').disabled = true;
+  $('confirm-price').textContent = '$0';
+
+  showScreen('confirm');
+}
+
+// ==========================================
+// SELECCIÓN DE VEHÍCULO
+// ==========================================
+function renderVehicleList() {
+  const container = $('vehicle-list');
+  container.innerHTML = VEHICLES.map(v => {
+    const price = calcPrice(v, state.tripDistance);
+    return `<button class="vehicle-card btn-press w-full flex items-center gap-3 bg-surface rounded-xl p-3.5 border-2 border-transparent hover:border-bdr transition text-left" data-vid="${v.id}" data-price="${price}">
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background:${v.color}15">
+        <span class="material-icons-round text-2xl" style="color:${v.color}">${v.icon}</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-bold text-txt">${v.name}</p>
+        <p class="text-xs text-txt-s">${v.desc} · ${v.pax} pasajeros</p>
+      </div>
+      <div class="text-right flex-shrink-0">
+        <p class="text-sm font-bold text-txt">$${price}</p>
+        <p class="text-xs text-txt-s">${v.eta} min</p>
+      </div>
+    </button>`;
+  }).join('');
+
+  container.querySelectorAll('.vehicle-card').forEach(card => {
+    card.addEventListener('click', ()=>{
+      container.querySelectorAll('.vehicle-card').forEach(c => c.classList.remove('border-accent'));
+      card.classList.add('border-accent');
+      state.selectedVehicle = card.dataset.vid;
+      state.tripPrice = parseInt(card.dataset.price);
+      $('confirm-price').textContent = `$${state.tripPrice}`;
+      $('btn-request').disabled = false;
+    });
+  });
+}
+
+// ==========================================
+// CONFIRMAR VIAJE
+// ==========================================
+function initConfirm() {
+  $('btn-confirm-back').addEventListener('click', ()=>{
+    showScreen('search');
+  });
+
+  $('btn-edit-dest').addEventListener('click', ()=>{
+    showScreen('search');
+    setTimeout(()=>$('search-input').focus(), 400);
+  });
+
+  $('btn-request').addEventListener('click', ()=>{
+    if(!state.selectedVehicle) return;
+    startMatching();
+  });
+
+  // Modal de pago
+  $('btn-change-payment').addEventListener('click', ()=>{
+    $('payment-modal').classList.remove('hidden');
+    $('payment-modal').classList.add('active');
+  });
+
+  $('btn-close-payment').addEventListener('click', ()=>{
+    $('payment-modal').classList.add('hidden');
+    $('payment-modal').classList.remove('active');
+  });
+
+  document.querySelectorAll('.pay-option').forEach(btn => {
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.pay-option').forEach(b => {
+        b.classList.remove('border-accent');
+        b.classList.add('border-transparent');
+        b.querySelector('.material-icons-round:last-child')?.remove();
+      });
+      btn.classList.remove('border-transparent');
+      btn.classList.add('border-accent');
+      const check = document.createElement('span');
+      check.className = 'material-icons-round text-accent text-xl';
+      check.textContent = 'check_circle';
+      btn.appendChild(check);
+      state.paymentMethod = btn.dataset.method;
+      $('payment-method').textContent = state.paymentMethod;
+    });
+  });
+}
+
+// ==========================================
+// EMPAREJAMIENTO
+// ==========================================
+function startMatching() {
+  showScreen('matching');
+  $('matching-text').textContent = 'Buscando conductor...';
+  $('matching-sub').textContent = 'Esto puede tomar unos segundos';
+
+  const t1 = setTimeout(()=>{
+    $('matching-text').textContent = 'Conductor encontrado';
+    $('matching-sub').textContent = 'Conectando con tu conductor...';
+  }, 2500);
+
+  const t2 = setTimeout(()=>{
+    clearRoute();
+    startTrip();
+  }, 3500);
+
+  state.tripTimeouts.push(t1, t2);
+}
+
+ $('btn-cancel-match').addEventListener('click', ()=>{
+  state.tripTimeouts.forEach(t=>clearTimeout(t));
+  state.tripTimeouts=[];
+  showScreen('confirm');
+  drawRoute(USER_LOCATION, state.selectedDestination);
+  showToast('Solicitud cancelada','info');
+});
+
+// ==========================================
+// VIAJE EN CURSO
+// ==========================================
+function startTrip() {
+  const driver = DRIVERS[Math.floor(Math.random()*DRIVERS.length)];
+  const fromLat = USER_LOCATION.lat + (Math.random()-0.5)*0.01;
+  const fromLng = USER_LOCATION.lng + (Math.random()-0.5)*0.01;
+
+  // Actualizar UI del viaje
+  $('trip-driver-name').textContent = driver.name;
+  $('trip-driver-car').textContent = `${driver.car} · ${driver.plate}`;
+  $('trip-driver-rating').textContent = driver.rating;
+  $('trip-driver-img').src = `https://picsum.photos/seed/${driver.img}/100/100.jpg`;
+  $('trip-pickup').textContent = 'Mi ubicacion actual';
+  $('trip-dest').textContent = state.selectedDestination.name;
+  $('trip-price').textContent = `$${state.tripPrice}`;
+  $('trip-payment').textContent = state.paymentMethod;
+  $('trip-status-text').textContent = 'Conductor en camino';
+  $('trip-eta').textContent = '4 min';
+
+  // Mostrar marcador del conductor acercándose
+  drawRoute(USER_LOCATION, state.selectedDestination);
+  showDriverTripMarker(fromLat, fromLng);
+
+  const bounds = L.latLngBounds([[fromLat,fromLng],[USER_LOCATION.lat,USER_LOCATION.lng]]);
+  map.fitBounds(bounds, {padding:[180,50], maxZoom:16});
+
+  showScreen('trip');
+
+  // Simular conductor acercándose
+  let step = 0;
+  const totalSteps = 12;
+  const moveInterval = setInterval(()=>{
+    step++;
+    const t = step/totalSteps;
+    const curLat = fromLat + (USER_LOCATION.lat-fromLat)*t;
+    const curLng = fromLng + (USER_LOCATION.lng-fromLng)*t;
+    showDriverTripMarker(curLat, curLng);
+    const remainMin = Math.max(1, Math.round(4*(1-t)));
+    $('trip-eta').textContent = `${remainMin} min`;
+
+    if(step >= totalSteps) {
+      clearInterval(moveInterval);
+      showToast('Tu conductor ha llegado','success');
+      $('trip-status-text').textContent = 'Conductor esperando';
+      $('trip-eta').textContent = 'Llego';
+
+      // Iniciar viaje real tras 2 segundos
+      const t3 = setTimeout(()=>{
+        $('trip-status-text').textContent = 'En viaje';
+        $('trip-status-bar').querySelector('div').classList.remove('bg-accent');
+        $('trip-status-bar').querySelector('div').classList.add('bg-success');
+        showToast('Viaje iniciado','info');
+
+        // Simular viaje al destino
+        let tripStep = 0;
+        const tripTotal = 20;
+        const tripInterval = setInterval(()=>{
+          tripStep++;
+          const tt = tripStep/tripTotal;
+          const tLat = USER_LOCATION.lat + (state.selectedDestination.lat-USER_LOCATION.lat)*tt;
+          const tLng = USER_LOCATION.lng + (state.selectedDestination.lng-USER_LOCATION.lng)*tt;
+          showDriverTripMarker(tLat, tLng);
+          const remain = Math.max(1, Math.round(state.tripEta*(1-tt)));
+          $('trip-eta').textContent = `${remain} min`;
+
+          if(tripStep >= tripTotal) {
+            clearInterval(tripInterval);
+            finishTrip(driver);
+          }
+        }, 500);
+        state.tripTimeouts.push(tripInterval);
+      }, 2000);
+      state.tripTimeouts.push(t3);
+    }
+  }, 500);
+  state.tripTimeouts.push(moveInterval);
+}
+
+function finishTrip(driver) {
+  clearRoute();
+  showToast('Has llegado a tu destino','success');
+
+  // Guardar en historial
+  const now = new Date();
+  const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const dateStr = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}, ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  TRIP_HISTORY.unshift({
+    date: dateStr,
+    origin: 'Mi ubicacion',
+    dest: state.selectedDestination.name,
+    price: state.tripPrice,
+    type: VEHICLES.find(v=>v.id===state.selectedVehicle)?.name || 'Standard',
+    driver: driver.name,
+    rating: 0
+  });
+
+  // Mostrar calificación
+  setTimeout(()=>{
+    showRating(driver);
+  }, 1000);
+}
+
+// ==========================================
+// CANCELAR VIAJE
+// ==========================================
+ $('btn-cancel-trip').addEventListener('click', ()=>{
+  state.tripTimeouts.forEach(t=>{ clearTimeout(t); clearInterval(t); });
+  state.tripTimeouts=[];
+  clearRoute();
+  showScreen('home');
+  map.setView([USER_LOCATION.lat, USER_LOCATION.lng], 15);
+  showToast('Viaje cancelado','info');
+});
+
+// ==========================================
+// CALIFICACIÓN
+// ==========================================
+function showRating(driver) {
+  state.ratingStars = 0;
+  state.tip = 0;
+  $('rating-driver-name').textContent = driver.name;
+  $('rating-driver-img').src = `https://picsum.photos/seed/${driver.img}/100/100.jpg`;
+  $('rating-label').textContent = '';
+  $('btn-submit-rating').disabled = true;
+  document.querySelectorAll('#rating-stars .star-btn').forEach(s => s.classList.remove('lit'));
+  document.querySelectorAll('.tip-btn').forEach(b => { b.classList.remove('border-accent','bg-accent/10'); b.classList.add('border-bdr'); });
+
+  showScreen('rating');
+}
+
+const RATING_LABELS = ['','Malo','Regular','Bien','Muy bien','Excelente'];
+
+document.querySelectorAll('#rating-stars .star-btn').forEach(btn => {
+  btn.addEventListener('click', ()=>{
+    const star = parseInt(btn.dataset.star);
+    state.ratingStars = star;
+    document.querySelectorAll('#rating-stars .star-btn').forEach(s => {
+      s.classList.toggle('lit', parseInt(s.dataset.star) <= star);
+    });
+    $('rating-label').textContent = RATING_LABELS[star];
+    $('btn-submit-rating').disabled = false;
+  });
+});
+
+document.querySelectorAll('.tip-btn').forEach(btn => {
+  btn.addEventListener('click', ()=>{
+    state.tip = parseInt(btn.dataset.tip);
+    document.querySelectorAll('.tip-btn').forEach(b => { b.classList.remove('border-accent','bg-accent/10'); b.classList.add('border-bdr'); });
+    btn.classList.remove('border-bdr');
+    btn.classList.add('border-accent','bg-accent/10');
+  });
+});
+
+ $('btn-submit-rating').addEventListener('click', ()=>{
+  if(TRIP_HISTORY.length > 0) TRIP_HISTORY[0].rating = state.ratingStars;
+  const tipMsg = state.tip > 0 ? ` con propina de $${state.tip}` : '';
+  showToast(`Calificacion enviada${tipMsg}`,'success');
+  state.selectedVehicle = null;
+  state.selectedDestination = null;
+  showScreen('home');
+  map.setView([USER_LOCATION.lat, USER_LOCATION.lng], 15);
+});
+
+ $('btn-skip-rating').addEventListener('click', ()=>{
+  state.selectedVehicle = null;
+  state.selectedDestination = null;
+  showScreen('home');
+  map.setView([USER_LOCATION.lat, USER_LOCATION.lng], 15);
+});
+
+// ==========================================
+// MENÚ LATERAL
+// ==========================================
+function initMenu() {
+  $('btn-menu').addEventListener('click', ()=>{
+    $('side-menu').style.transform = 'translateX(0)';
+    $('menu-overlay').classList.add('open');
+  });
+
+  $('menu-overlay').addEventListener('click', closeMenu);
+
+  document.querySelectorAll('.menu-item[data-screen]').forEach(item => {
+    item.addEventListener('click', ()=>{
+      const target = item.dataset.screen;
+      closeMenu();
+      setTimeout(()=>{
+        if(target === 'home') {
+          showScreen('home');
+          map.setView([USER_LOCATION.lat, USER_LOCATION.lng], 15);
+        } else if(target === 'history') {
+          renderHistory();
+          showScreen(target);
+        } else {
+          showScreen(target);
+        }
+      }, 300);
+    });
+  });
+
+  $('btn-logout').addEventListener('click', ()=>{
+    localStorage.removeItem('voya_logged');
+    closeMenu();
+    setTimeout(()=>{
+      showScreen('login');
+      $('login-phone-step').classList.remove('hidden');
+      $('login-otp-step').classList.add('hidden');
+      $('phone-input').value = '';
+      $('btn-continue-phone').disabled = true;
+      document.querySelectorAll('.otp-box').forEach(b=>b.value='');
+      $('btn-verify-otp').disabled = true;
+    }, 300);
+  });
+
+  // Botones "atrás" en pantallas internas
+  document.querySelectorAll('.btn-back').forEach(btn => {
+    btn.addEventListener('click', ()=>{
+      showScreen('home');
+      map.setView([USER_LOCATION.lat, USER_LOCATION.lng], 15);
+    });
+  });
+}
+
+function closeMenu() {
+  $('side-menu').style.transform = 'translateX(-100%)';
+  $('menu-overlay').classList.remove('open');
+}
+
+// ==========================================
+// HISTORIAL
+// ==========================================
+function renderHistory() {
+  const container = $('history-list');
+  if(!TRIP_HISTORY.length) {
+    container.innerHTML = '<div class="text-center py-12"><span class="material-icons-round text-5xl text-elevated mb-3 block">history</span><p class="text-txt-s text-sm">No tienes viajes aun</p></div>';
+    return;
+  }
+  container.innerHTML = TRIP_HISTORY.map(t => `
+    <div class="bg-surface rounded-xl p-4 border border-bdr/40">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs text-txt-s">${t.date}</span>
+        <span class="text-sm font-bold text-txt">$${t.price}</span>
+      </div>
+      <div class="flex gap-3">
+        <div class="flex flex-col items-center py-0.5">
+          <div class="w-2 h-2 rounded-full bg-success mt-1"></div>
+          <div class="w-0.5 flex-1 bg-bdr my-0.5"></div>
+          <div class="w-2 h-2 rounded-full bg-accent"></div>
+        </div>
+        <div class="flex-1 min-w-0 space-y-2">
+          <p class="text-sm text-txt truncate">${t.origin}</p>
+          <p class="text-sm text-txt truncate">${t.dest}</p>
+        </div>
+      </div>
+      <div class="flex items-center justify-between mt-3 pt-3 border-t border-bdr/30">
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-txt-s bg-elevated px-2 py-0.5 rounded">${t.type}</span>
+          <span class="text-xs text-txt-s">${t.driver}</span>
+        </div>
+        <div class="flex items-center gap-0.5">
+          ${Array.from({length:5},(_,i)=>`<span class="material-icons-round text-sm ${i<t.rating?'text-warn':'text-elevated'}">star</span>`).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ==========================================
+// NOTIFICACIONES (simulado)
+// ==========================================
+ $('btn-notif').addEventListener('click', ()=>{
+  showToast('No tienes notificaciones nuevas','info');
+});
+
+// ==========================================
+// INICIALIZACIÓN
+// ==========================================
+function init() {
+  initMap();
+
+  // Verificar sesión
+  const logged = localStorage.getItem('voya_logged');
+
+  // Splash → transición
+  setTimeout(()=>{
+    if(logged) {
+      showScreen('home');
+    } else {
+      showScreen('login');
+    }
+  }, 2200);
+
+  initLogin();
+  initSearch();
+  initConfirm();
+  initMenu();
+}
+
+// Ejecutar al cargar
+document.addEventListener('DOMContentLoaded', init);
+</script>
 </body>
 </html>
