@@ -11,7 +11,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<!-- Firebase Storage deshabilitado para testeo sin pago --><script>var storage=null;</script>
 <style>
 :root{--bg:#0A0F14;--surface:#121A22;--card:#1A242E;--border:#2A3642;--fg:#F0F4F8;--muted:#7A8B9A;--accent:#0EA5A0;--accent-lt:#14D4CD;--accent-glow:rgba(14,165,160,.25);--danger:#FF5252;--warn:#FFB74D;--grad:linear-gradient(135deg,#0EA5A0,#0C8CE9);--r:16px;--rs:10px}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -274,16 +274,10 @@ button{font-family:inherit}input,select,textarea{font-family:inherit}
 </ol>
 <a href="https://console.firebase.google.com/u/0/project/cooperativa-unira/firestore" target="_blank" style="display:block;text-align:center;padding:10px;background:var(--card);border-radius:var(--rs);color:var(--accent-lt);font-size:12px;font-weight:600;text-decoration:none;margin-top:10px"><i class="fas fa-external-link-alt"></i> Abrir Firestore</a>
 </div>
-<div class="sc-card">
-<h3><i class="fas fa-cloud-upload-alt"></i> Paso 4: Crear Storage</h3>
-<p>Busca "Storage" en el menu izquierdo.</p>
-<ol>
-<li>Hace clic en "Comenzar"</li>
-<li>Elegi "Modo de prueba"</li>
-<li>Elegi ubicacion: <strong>us-east1</strong></li>
-<li>Hace clic en "Listo"</li>
-</ol>
-<a href="https://console.firebase.google.com/u/0/project/cooperativa-unira/storage" target="_blank" style="display:block;text-align:center;padding:10px;background:var(--card);border-radius:var(--rs);color:var(--accent-lt);font-size:12px;font-weight:600;text-decoration:none;margin-top:10px"><i class="fas fa-external-link-alt"></i> Abrir Storage</a>
+<div class="sc-card" style="border:1px solid rgba(14,165,160,.3);background:rgba(14,165,160,.05)">
+<h3><i class="fas fa-check-circle" style="color:var(--accent-lt)"></i> Storage: No necesario</h3>
+<p>Las fotos se guardan directamente en Firestore como base64. No necesitas crear Firebase Storage. Esto funciona gratis en el plan Spark.</p>
+<p style="font-size:9px;color:var(--muted)">Cuando quieras pasar a produccion, podes activar Storage y cambiar el codigo.</p>
 </div>
 <button class="bp" onclick="saveSetup()">Guardar y continuar</button>
 </div></div>
@@ -386,7 +380,7 @@ var regSteps=[
 ];
 
 function go(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on')});document.getElementById(id).classList.add('on')}
-setTimeout(function(){var saved=localStorage.getItem('un_fb');if(saved){try{var cfg=JSON.parse(saved);firebase.initializeApp(cfg);db=firebase.firestore();auth=firebase.auth();storage=firebase.storage();isFirebaseReady=true;go('role')}catch(e){go('role')}}else{go('setup')}},2200);
+setTimeout(function(){var saved=localStorage.getItem('un_fb');if(saved){try{var cfg=JSON.parse(saved);firebase.initializeApp(cfg);db=firebase.firestore();auth=firebase.auth();isFirebaseReady=true;go('role')}catch(e){go('role')}}else{go('setup')}},2200);
 
 function saveSetup(){
   var raw=document.getElementById('fbConfig').value.trim();
@@ -394,7 +388,7 @@ function saveSetup(){
   try{
     var cfg=JSON.parse(raw);
     if(!cfg.apiKey||!cfg.projectId){toast('JSON invalido: falta apiKey o projectId','err');return}
-    firebase.initializeApp(cfg);db=firebase.firestore();auth=firebase.auth();storage=firebase.storage();
+    firebase.initializeApp(cfg);db=firebase.firestore();auth=firebase.auth();
     isFirebaseReady=true;localStorage.setItem('un_fb',raw);
     toast('Firebase conectado','ok');
     if(window.location.search.indexOf('admin=true')>=0){go('admin');loadAdmin('pending');return}
@@ -807,25 +801,19 @@ function nextStep(){
   S.rStep++;renStep();
 }
 
-/* ====== BUG 3 CORREGIDO: parentesis desbalanceados en Object.assign y .set() ====== */
+/* ====== SIN Firebase Storage: guarda fotos como base64 en Firestore (testeo gratis) ====== */
 function submitReg(){
-  toast('Subiendo a Firebase...','ok');
-  document.querySelector('.rnav').innerHTML='<button class="bp" disabled><i class="fas fa-spinner" style="animation:spin 1s linear infinite"></i> Subiendo...</button>';
+  toast('Guardando datos...','ok');
+  document.querySelector('.rnav').innerHTML='<button class="bp" disabled><i class="fas fa-spinner" style="animation:spin 1s linear infinite"></i> Guardando...</button>';
+  var fotos={};
   var photoKeys=Object.keys(S.rPh);
-  var upl=photoKeys.map(function(key){
-    return new Promise(function(resolve){
-      var ref=storage.ref('drivers/'+S.uid+'/'+key);
-      ref.put(dataURLtoBlob(S.rPh[key])).then(function(snap){return snap.ref.getDownloadURL()}).then(function(url){resolve({key:key,url:url})}).catch(function(){resolve({key:key,url:S.rPh[key]})});
-    });
+  photoKeys.forEach(function(key){
+    fotos[key]=S.rPh[key];
   });
-  Promise.all(upl).then(function(results){
-    var fotos={};results.forEach(function(r){fotos[r.key]=r.url});
-    return db.collection('drivers').doc(S.uid).set(Object.assign({},S.rD,{fotos:fotos,status:'pending',userId:S.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()}));
-  }).then(function(){toast('Solicitud enviada. Admin debe aprobarla.','ok');showDrvPend('pending');
+  db.collection('drivers').doc(S.uid).set(Object.assign({},S.rD,{fotos:fotos,status:'pending',userId:S.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()})).then(function(){
+    toast('Solicitud enviada. Admin debe aprobarla.','ok');showDrvPend('pending');
   }).catch(function(err){toast('Error: '+err.message,'err');renStep()});
 }
-function dataURLtoBlob(dataURL){var parts=dataURL.split(',');var mime=parts[0].match(/:(.*?);/)[1];var bstr=atob(parts[1]);var n=bstr.length;var u8arr=new Uint8Array(n);while(n--){u8arr[n]=bstr.charCodeAt(n)}
-  return new Blob([u8arr],{type:mime});}
 function exitReg(){if(confirm('Salir?')){S.rD={};S.rPh={};S.rStep=0;go('role')}}
 
 /* ====== BUG 4 CORREGIDO: </div> de mas en loadAdmin() ====== */
